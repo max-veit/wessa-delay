@@ -1,0 +1,3 @@
+# Specific (I)Python annoyances
+.ipynb_checkpoints
+__pycache__
