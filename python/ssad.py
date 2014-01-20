@@ -51,7 +51,7 @@ class Reaction(object):
                  propensity_const, delay=0.0):
         self.reactants = reactants
         self.products = products
-        self.state_vec = state_vec
+        self.state_vec = np.asarray(state_vec)
         self.propensity_const = propensity_const
         self.delay = delay
 
@@ -112,8 +112,17 @@ class Species(object):
         self.index = index
         self.species_id = species_id
 
+"""
+Exception to be raised when the simulation takes more steps than the
+pre-determined limit, if one exists.
+
+"""
+class StepsLimitException(Exception):
+    pass
+
 # TODO Document
-# TODO Implement sampling, or more reliable trajectory pausing
+# TODO Implement sampling
+# TODO Test restart capability
 class Trajectory(object):
     """
     Initialize a new trajectory.
@@ -138,11 +147,24 @@ class Trajectory(object):
         self.time = init_time
         self.rxn_counter = 0
         self.event_queue = []
-        self.status_message = "No dynamics run yet."
         self.history = ([self.time], [self.state])
+        self.next_rxn = None
+        self.next_rxn_time = None
+        self.next_rxn_delayed = False
 
     """
     Run the Gillespie SSA to evolve the initial concentrations in time.
+
+    If this method has been run on an object before, subsequent runs will
+    pick up where the last run left off. This means the effect of:
+        trj1.run_dynamics(duration1)
+        trj1.run_dynamics(duration2)
+    will be the same as that of
+        trj1.run_dynamics(duration1 + duration2)
+    ignoring possible pseudorandom number generator effects.
+    This capability is useful in, for example, weighted-ensemble
+    methods where the ability to pause and restart trajectories without
+    introducing any statistical bias is necessary.
 
     Parameters:
         duration    The amount of time for which the state should be
@@ -150,64 +172,112 @@ class Trajectory(object):
                     that of the system after 'duration' units of time.
 
     Optional Parameters:
-        max_steps   The maximum number of reaction steps that should be
+        max_steps   The maximum number of steps (reactions) that should be
                     run. The trajectory will be evolved until the time runs
                     out or the maximum number of steps is reached,
                     whichever comes first. If the steps limit is reached
                     first, the simulation time will be left at the time of
-                    the last reaction successfully executed.
+                    the last reaction successfully executed and an
+                    exception will be raised.
                     If set to None, this parameter will be ignored and the
                     number of steps will be limited only by time.
 
     """
     def run_dynamics(self, duration, max_steps=None):
         stop_time = self.time + duration
-        self.rxn_counter = 0
-        while (max_steps is None) or (self.rxn_counter < max_steps - 1):
-            # Randomly sample the next reaction as well as its firing time
-            for ridx, rxn in enumerate(self.reactions):
-                self.propensities[ridx] = rxn.calc_propensity(self.state)
-            prop_csum = np.cumsum(self.propensities)
-            total_prop = prop_csum[-1]
-            wait_time = exponential(1.0 / total_prop)
-            next_rxn_time = self.time + wait_time
-            rxn_selector = random() * total_prop
-            for ridx, rxn in enumerate(self.reactions):
-                if prop_csum[ridx] > rxn_selector:
-                    next_rxn = rxn
-                    break
+        if max_steps is not None:
+            stop_steps = self.rxn_counter + max_steps
+        if (self.next_rxn is not None) and (self.next_rxn_time is not None):
+            resume = True
+        else:
+            resume = False
+
+        while self.time < stop_time:
+            if resume:
+                next_rxn = self.next_rxn
+                next_rxn_time = self.next_rxn_time
+                resume = False
+            else:
+                next_rxn, wait_time = self._sample_next_reaction()
+                next_rxn_time = self.time + wait_time
 
             # Handle delayed reactions, if any
-            execute_delayed = False
+            next_rxn_delayed = False
             if len(self.event_queue) != 0:
                 next_delayed = min(self.event_queue)
                 if next_delayed[0] < next_rxn_time:
                     next_delayed = heapq.heappop(self.event_queue)
-                    execute_delayed = True
+                    next_rxn = next_delayed[1]
+                    next_rxn_time = next_delayed[0]
+                    next_rxn_delayed = True
 
             # Execute the reaction, accounting for delayed reactions
-            if execute_delayed:
-                self._execute_rxn(*next_delayed)
+            if not next_rxn_delayed and next_rxn.delay > 0.0:
+                heapq.heappush(self.event_queue,
+                               (self.time + next_rxn.delay, next_rxn))
             else:
                 if next_rxn_time > stop_time:
-                    self.status_message = "Dynamics time run to completion."
+                    self._save_run_state(next_rxn, next_rxn_time,
+                                         next_rxn_delayed)
+                    self.time = stop_time
                     break
-                if next_rxn.delay > 0.0:
-                    heapq.heappush(self.event_queue,
-                                   (self.time + next_rxn.delay, next_rxn))
                 else:
-                    self._execute_rxn(next_rxn_time, next_rxn)
+                    self._execute_rxn(next_rxn, next_rxn_time)
+
+            if max_steps is not None:
+                if self.rxn_counter > stop_steps:
+                    raise StepsLimitException(
+                        "Trajectory run reached maximum allowed number " +
+                        "of steps (limit was " + str(max_steps) + ").")
+
+    """
+    Use random sampling to select the next reaction and firing time.
+
+    Returns a tuple of (reaction, wait time). The wait time is the duration
+    from the current simulation time to the time the next reaction fires.
+    It is sampled from an exponential distribution.
+
+    """
+    def _sample_next_reaction(self):
+        for ridx, rxn in enumerate(self.reactions):
+            self.propensities[ridx] = rxn.calc_propensity(self.state)
+        prop_csum = np.cumsum(self.propensities)
+        total_prop = prop_csum[-1]
+        wait_time = exponential(1.0 / total_prop)
+        rxn_selector = random() * total_prop
+        for ridx, rxn in enumerate(self.reactions):
+            if prop_csum[ridx] >= rxn_selector:
+                next_rxn = rxn
+                break
+        return (next_rxn, wait_time)
 
     """Execute a reaction, along with hooks like recording the state."""
-    def _execute_rxn(self, time, rxn):
+    def _execute_rxn(self, rxn, time):
         self.rxn_counter += 1
         self.state = self.state + rxn.state_vec
         self.time = time
         self.history[0].append(self.time)
         self.history[1].append(self.state)
 
+    """Save the trajectory state before pausing."""
+    def _save_run_state(self, rxn, time, is_delayed):
+        if is_delayed:
+            heapq.heappush(self.event_queue, (time, rxn))
+            self.next_rxn = rxn
+            self.next_rxn_time = self.time
+            self.next_rxn_delayed = True
+        else:
+            self.next_rxn = rxn
+            self.next_rxn_time = time
+            self.next_rxn_delayed = True
+
     def __str__(self):
-        return ("Trajectory at time " + str(self.time) +
-                " . Status message: " + self.status_message +
-                "Current state: " + str(self.state))
+        msg = ("Trajectory at time " + str(self.time) +
+               " . Current state: " + str(self.state) + ".")
+        if self.next_rxn_time is not None:
+            msg += (" Next reaction scheduled for time " +
+                    str(self.next_rxn_time) + " and is " +
+                    (" " if self.next_rxn_delayed else "not ") +
+                    "delayed.")
+        return msg
 
