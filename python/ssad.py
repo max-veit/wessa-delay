@@ -91,12 +91,13 @@ class Reaction(object):
 
 
 class StepsLimitException(Exception):
-"""
-Exception to be raised when the simulation takes more steps than the
-pre-determined limit, if one exists.
+    """
+    Exception to be raised when the simulation takes more steps than the
+    pre-determined limit, if one exists.
 
-"""
+    """
     pass
+
 
 # TODO Document
 # TODO Implement sampling
@@ -122,6 +123,7 @@ class Trajectory(object):
         self.weight = weight
         self.reactions = reactions
         self.propensities = np.empty((len(reactions)))
+        self.init_time = init_time
         self.time = init_time
         self.rxn_counter = 0
         self.event_queue = []
@@ -251,6 +253,7 @@ class Trajectory(object):
             self.next_rxn_time = time
             self.next_rxn_delayed = True
 
+    #TODO Validate sampling
     def sample_linspace(self, start_time, end_time, npoints):
         """
         Return a set of samples of the system state at linearly-spaced
@@ -265,14 +268,34 @@ class Trajectory(object):
         Returns:
             A tuple (times, states) of NumPy arrays. The first array (1-D)
             holds the times at which samples were taken, the second (2-D) holds
-            the state vectors with time along the first axis, species along the
-            second.
+            the state vectors with species along the first axis, times along
+            the second.
 
         A warning is issued if start_time is less than the Trajectory's
         init_time or if end_time is greater than the current time.
 
         """
-        pass
+        if (start_time < self.init_time) or (end_time > self.time):
+            print("Warning: Sample range is outside the timespan during" +
+                  "which dynamics were run. Samples may not be meaningful.")
+        times = np.linspace(start_time, end_time, npoints)
+        states = np.empty((self.state.size, times.size))
+        hist_times = iter(self.history[0])
+        hist_states = iter(self.history[1])
+        # Don't do exception handling - each history has at least one element
+        curr_time = next(hist_times)
+        curr_state = next(hist_states)
+        prev_state = curr_state
+        for tidx in range(times.size):
+            while curr_time < times[tidx]:
+                prev_state = curr_state
+                try:
+                    curr_state = next(hist_states)
+                    curr_time = next(hist_times)
+                except StopIteration:
+                    break
+            states[:,tidx] = prev_state
+        return times, states
 
     def __str__(self):
         msg = ("Trajectory at time " + str(self.time) +
