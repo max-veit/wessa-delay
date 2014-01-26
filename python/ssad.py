@@ -11,7 +11,9 @@ Classes:
 
 import heapq
 import functools
+import bisect
 from collections import defaultdict
+
 import numpy as np
 from numpy.random import exponential, random
 
@@ -21,8 +23,7 @@ class Reaction(object):
     Encapsulation of information about a reaction pathway.
 
     Public methods:
-        calc_propensity     Given state information, calculate the propensity
-                            of this reaction pathway.
+        calc_propensity     Calculate this pathway's propensity.
 
     """
 
@@ -61,7 +62,8 @@ class Reaction(object):
         """
         Calculate the propensity for this reaction with the given
         concentrations of the reactants. Currently only supports
-        unimolecular and bimolecular reactions.
+        unimolecular and bimolecular reactions. Higher-order reactions
+        can be expressed as a series of bimolecular reactions.
 
         """
         if len(self.reactants) == 0:
@@ -99,10 +101,26 @@ class StepsLimitException(Exception):
     pass
 
 
-# TODO Document
-# TODO Implement sampling
-# TODO Test restart capability
+# TODO Systematically test restart capability
+# TODO Replace history sampling with more efficient delayed history trackers
 class Trajectory(object):
+    """
+    A single chemical-kinetic trajectory in state (concentration) space.
+
+    Contains functionality for simulating dynamics of the system, thereby
+    extending the trajectory, and for sampling the state of the system
+    along the trajectory.
+
+    This class uses the Gillespie Stochastic Simulation Algorithm (SSA) to
+    simulate the time evolution of a small chemical system.
+
+    Public methods:
+        run_dynamics        Run the SSA to advance the trajectory in time.
+        sample_state        Sample the system's state at a given time.
+        sample_state_seq    Sample the state at a sequence of times.
+
+    """
+
     def __init__(self, state, weight, reactions, init_time=0.0):
         """
         Initialize a new trajectory.
@@ -253,32 +271,53 @@ class Trajectory(object):
             self.next_rxn_time = time
             self.next_rxn_delayed = True
 
-    #TODO Validate sampling
-    def sample_linspace(self, start_time, end_time, npoints):
+    def sample_state(self, time):
         """
-        Return a set of samples of the system state at linearly-spaced
-        intervals in time.
+        Return a single sample of this trajectory's state at a given time.
 
         Parameters:
-            start_time      Simulation time at which the samples should start.
-            end_time        Simulation time at which samples should end.
-                            Both limits are inclusive.
-            npoints         Number of points at which to sample.
+            time    Any time in the range (self.start_time, self.time) at
+                    which to draw the sample.
 
         Returns:
-            A tuple (times, states) of NumPy arrays. The first array (1-D)
-            holds the times at which samples were taken, the second (2-D) holds
-            the state vectors with species along the first axis, times along
-            the second.
+            State vector at the given time, as a 1-D NumPy array.
 
-        A warning is issued if start_time is less than the Trajectory's
-        init_time or if end_time is greater than the current time.
+        Note: If a large number of samples is desired, the function
+        sample_state_seq will likely be more efficient.
 
         """
-        if (start_time < self.init_time) or (end_time > self.time):
-            print("Warning: Sample range is outside the timespan during" +
-                  "which dynamics were run. Samples may not be meaningful.")
-        times = np.linspace(start_time, end_time, npoints)
+        if (time > self.time) or (time < self.init_time):
+            raise ValueError("Out-of-bounds time " + str(time) + " received.")
+        idx = bisect.bisect_right(self.history[0], time)
+        if idx > 0:
+            return (self.history[1])[idx - 1]
+
+    #TODO Validate sampling
+    def sample_state_seq(self, times):
+        """
+        Return a set of samples of the system state.
+
+        Parameters:
+            times   A sequence of times at which to sample. The sequence
+                    must be sorted in increasing order and not contain any
+                    times that are earlier than the trajectory's
+                    starting time or later than the trajectory's
+                    current time.
+
+        Returns:
+            A 2-D NumPy array containing the state vectors at the specified
+            sample times. Species are along the first axis, times are along
+            the second.
+
+        """
+        if not all(times[i] <= times[i+1] for i in xrange(len(times) - 1)):
+            raise ValueError("The sequence of times is not sorted.")
+        if (times[-1] > self.time):
+            raise ValueError("Latest time " + str(times[-1]) + " is later " +
+                             "than the current trajectory time.")
+        if (times[0] < self.init_time):
+            raise ValueError("First time " + str(times[0]) + " is earlier " +
+                             "than the trajectory's starting time.")
         states = np.empty((self.state.size, times.size))
         hist_times = iter(self.history[0])
         hist_states = iter(self.history[1])
