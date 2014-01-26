@@ -65,6 +65,10 @@ class Reaction(object):
         unimolecular and bimolecular reactions. Higher-order reactions
         can be expressed as a series of bimolecular reactions.
 
+        Important note: If this reaction is delayed, the caller must
+        specify the state as it was at time (t - delay) so that the
+        propensity can be calculated correctly.
+
         """
         if len(self.reactants) == 0:
             return self.propensity_const
