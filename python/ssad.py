@@ -314,7 +314,7 @@ class Trajectory(object):
             the second.
 
         """
-        if not all(times[i] <= times[i+1] for i in xrange(len(times) - 1)):
+        if not all(times[i] <= times[i+1] for i in range(len(times) - 1)):
             raise ValueError("The sequence of times is not sorted.")
         if (times[-1] > self.time):
             raise ValueError("Latest time " + str(times[-1]) + " is later " +
