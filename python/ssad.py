@@ -9,7 +9,7 @@ Classes:
 
 """
 
-import heapq
+#import heapq
 import functools
 import bisect
 from collections import defaultdict
@@ -144,16 +144,13 @@ class Trajectory(object):
         self.state = np.asarray(state)
         self.weight = weight
         self.reactions = reactions
-        self.propensities = np.empty((len(reactions)))
         self.init_time = init_time
         self.time = init_time
         self.rxn_counter = 0
-        self.event_queue = []
         self.history = ([self.time], [self.state])
         self.next_rxn = None
         self.next_rxn_time = None
-        self.next_rxn_delayed = False
-        self.rxn_tallies = defaultdict(lambda: 0)
+        #self.rxn_tallies = defaultdict(lambda: 0)
 
     def run_dynamics(self, duration, max_steps=None):
         """
@@ -204,34 +201,41 @@ class Trajectory(object):
                 next_rxn, wait_time = self._sample_next_reaction()
                 next_rxn_time = self.time + wait_time
 
-            # Handle delayed reactions, if any
-            next_rxn_delayed = False
-            if len(self.event_queue) != 0:
-                next_delayed = min(self.event_queue)
-                if next_delayed[0] < next_rxn_time:
-                    next_delayed = heapq.heappop(self.event_queue)
-                    next_rxn = next_delayed[1]
-                    next_rxn_time = next_delayed[0]
-                    next_rxn_delayed = True
-
-            # Execute the reaction, accounting for delayed reactions
-            if not next_rxn_delayed and next_rxn.delay > 0.0:
-                heapq.heappush(self.event_queue,
-                               (self.time + next_rxn.delay, next_rxn))
-            else:
+            # Execute the reaction, if possible
+            if self._can_run_rxn(next_rxn):
                 if next_rxn_time > stop_time:
                     self._save_run_state(next_rxn, next_rxn_time,
                                          next_rxn_delayed)
-                    self.time = stop_time
-                    break
+                        self.time = stop_time
+                        break
                 else:
                     self._execute_rxn(next_rxn, next_rxn_time)
+            # If the reaction can't run, wait until the next cycle and
+            # select another.
 
+            # This may not stop the trajectory _exactly_ at the limit, but
+            # that's not a big problem right now.
             if max_steps is not None:
-                if self.rxn_counter > stop_steps:
+                if self.rxn_counter >= stop_steps:
                     raise StepsLimitException(
                         "Trajectory run reached maximum allowed number " +
                         "of steps (limit was " + str(max_steps) + ").")
+
+    def _can_run_rxn(self, rxn):
+        """
+        Determine whether a reaction is allowed to run.
+
+        Uses state information to determine whether a given reaction would
+        cause any element of the state vector to go negative.
+
+        Parameters:
+            rxn     Reaction to check
+
+        Returns:
+            Whether the reaction should be allowed to run, as a boolean.
+
+        """
+        return np.all(self.state + rxn.state_vec >= 0)
 
     def _sample_next_reaction(self):
         """
@@ -241,10 +245,19 @@ class Trajectory(object):
         from the current simulation time to the time the next reaction fires.
         It is sampled from an exponential distribution.
 
+        Handles delayed reactions by looking back in the history and using the
+        state as it was (delay) time units ago.
+
         """
+        propensities = np.empty((len(reactions)))
         for ridx, rxn in enumerate(self.reactions):
-            self.propensities[ridx] = rxn.calc_propensity(self.state)
-        prop_csum = np.cumsum(self.propensities)
+            if rxn.delay == 0.0:
+                propensities[ridx] = rxn.calc_propensity(self.state)
+            else:
+                propensities[ridx] = self.sample_state(
+                        self.time - rxn.delay,
+                        use_init_state = True)
+        prop_csum = np.cumsum(propensities)
         total_prop = prop_csum[-1]
         wait_time = exponential(1.0 / total_prop)
         rxn_selector = random() * total_prop
@@ -275,13 +288,20 @@ class Trajectory(object):
             self.next_rxn_time = time
             self.next_rxn_delayed = True
 
-    def sample_state(self, time):
+    def sample_state(self, time, use_init_state=False):
         """
         Return a single sample of this trajectory's state at a given time.
 
         Parameters:
-            time    Any time in the range (self.start_time, self.time) at
-                    which to draw the sample.
+            time    Any time in the range (self.start_time, self.time)
+                    at which to draw the sample.
+
+        Optional Parameters:
+            use_init_state  Whether to return this trajectory's initial state
+                            if time is earlier than this trajectory's starting
+                            time; if this option is set to False, that
+                            condition will raise an exception.
+                            Default False.
 
         Returns:
             State vector at the given time, as a 1-D NumPy array.
@@ -290,13 +310,17 @@ class Trajectory(object):
         sample_state_seq will likely be more efficient.
 
         """
-        if (time > self.time) or (time < self.init_time):
+        if (time > self.time) or (time < self.init_time and
+                                  not use_init_state):
             raise ValueError("Out-of-bounds time " + str(time) + " received.")
+        if (time < self.init_time) and use_init_state:
+            return self.init_state
         idx = bisect.bisect_right(self.history[0], time)
         if idx > 0:
             return (self.history[1])[idx - 1]
 
-    #TODO Validate sampling
+    # TODO Validate sampling
+    # TODO Implement use_init_state capability (like in sample_state)
     def sample_state_seq(self, times):
         """
         Return a set of samples of the system state.
