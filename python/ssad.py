@@ -371,3 +371,5 @@ class Trajectory(object):
                     str(self.next_rxn_time) + ".")
         return msg
 
+if __name__ == "__main__":
+    raise NotImplemented("No script functionality here.")
