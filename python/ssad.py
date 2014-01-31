@@ -105,8 +105,8 @@ class StepsLimitException(Exception):
     pass
 
 
-# TODO Systematically test restart capability
 # TODO Replace history sampling with more efficient delayed history trackers
+# TODO Consider changing structure of history data
 class Trajectory(object):
     """
     A single chemical-kinetic trajectory in state (concentration) space.
@@ -152,6 +152,7 @@ class Trajectory(object):
         self.next_rxn_time = None
         #self.rxn_tallies = defaultdict(lambda: 0)
 
+    # TODO Systematically test restart capability
     def run_dynamics(self, duration, max_steps=None):
         """
         Run the Gillespie SSA to evolve the initial concentrations in time.
@@ -162,7 +163,8 @@ class Trajectory(object):
             trj1.run_dynamics(duration2)
         will be the same as that of
             trj1.run_dynamics(duration1 + duration2)
-        ignoring possible pseudorandom number generator effects.
+        assuming the pseudorandom number generator's state is not changed
+        in between the two calls.
         This capability is useful in, for example, weighted-ensemble
         methods where the ability to pause and restart trajectories without
         introducing any statistical bias is necessary.
@@ -204,10 +206,9 @@ class Trajectory(object):
             # Execute the reaction, if possible
             if self._can_run_rxn(next_rxn):
                 if next_rxn_time > stop_time:
-                    self._save_run_state(next_rxn, next_rxn_time,
-                                         next_rxn_delayed)
-                        self.time = stop_time
-                        break
+                    self._save_run_state(next_rxn, next_rxn_time)
+                    self.time = stop_time
+                    break
                 else:
                     self._execute_rxn(next_rxn, next_rxn_time)
             # If the reaction can't run, wait until the next cycle and
@@ -249,7 +250,7 @@ class Trajectory(object):
         state as it was (delay) time units ago.
 
         """
-        propensities = np.empty((len(reactions)))
+        propensities = np.empty((len(self.reactions)))
         for ridx, rxn in enumerate(self.reactions):
             if rxn.delay == 0.0:
                 propensities[ridx] = rxn.calc_propensity(self.state)
@@ -274,19 +275,12 @@ class Trajectory(object):
         self.time = time
         self.history[0].append(self.time)
         self.history[1].append(self.state)
-        self.rxn_tallies[rxn] += 1
+        #self.rxn_tallies[rxn] += 1
 
-    def _save_run_state(self, rxn, time, is_delayed):
+    def _save_run_state(self, rxn, time):
         """Save the trajectory state before pausing."""
-        if is_delayed:
-            heapq.heappush(self.event_queue, (time, rxn))
-            self.next_rxn = rxn
-            self.next_rxn_time = self.time
-            self.next_rxn_delayed = True
-        else:
-            self.next_rxn = rxn
-            self.next_rxn_time = time
-            self.next_rxn_delayed = True
+        self.next_rxn = rxn
+        self.next_rxn_time = time
 
     def sample_state(self, time, use_init_state=False):
         """
@@ -314,7 +308,7 @@ class Trajectory(object):
                                   not use_init_state):
             raise ValueError("Out-of-bounds time " + str(time) + " received.")
         if (time < self.init_time) and use_init_state:
-            return self.init_state
+            return self.history[1][0]
         idx = bisect.bisect_right(self.history[0], time)
         if idx > 0:
             return (self.history[1])[idx - 1]
@@ -362,15 +356,13 @@ class Trajectory(object):
                 except StopIteration:
                     break
             states[:,tidx] = prev_state
-        return times, states
+        return states
 
     def __str__(self):
         msg = ("Trajectory at time " + str(self.time) +
                " . Current state: " + str(self.state) + ".")
         if self.next_rxn_time is not None:
             msg += (" Next reaction scheduled for time " +
-                    str(self.next_rxn_time) + " and is " +
-                    (" " if self.next_rxn_delayed else "not ") +
-                    "delayed.")
+                    str(self.next_rxn_time) + ".")
         return msg
 
