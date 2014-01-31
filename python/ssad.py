@@ -125,18 +125,19 @@ class Trajectory(object):
 
     """
 
-    def __init__(self, state, weight, reactions, init_time=0.0):
+    def __init__(self, state, reactions, weight=1, init_time=0.0):
         """
         Initialize a new trajectory.
 
         Parameters:
             state       Initial state vector. Indices represent species
                         indices, values are the populations of those species.
-            weight      Initial statistical weight of this trajectory.
             reactions   List of reaction pathways that govern this trajectory's
                         dynamics.
 
         Optional Parameters:
+            weight      Initial statistical weight of this trajectory, useful
+                        in ensemble methods. Defaults to 1.
             init_time   Simulation time at which this trajectory starts.
                         Defaults to 0.0 time units.
 
