@@ -155,6 +155,9 @@ class Trajectory(object):
         self.reject_tallies = defaultdict(lambda: 0)
 
     # TODO Systematically test restart capability
+    # TODO Rethink storing of next reaction times - isn't the exponential
+    #      distribution memoryless? Impact on weighted-ensemble methods?
+    #      Delayed reactions (non-Markovian)??
     def run_dynamics(self, duration, max_steps=None):
         """
         Run the Gillespie SSA to evolve the initial concentrations in time.
@@ -213,11 +216,10 @@ class Trajectory(object):
                     break
                 else:
                     self._execute_rxn(next_rxn, next_rxn_time)
-            else:
-                self.reject_tallies[next_rxn] += 1
-
             # If the reaction can't run, wait until the next cycle and
             # select another.
+            else:
+                self.reject_tallies[next_rxn] += 1
 
             # This may not stop the trajectory _exactly_ at the limit, but
             # that's not a big problem right now.
@@ -362,6 +364,59 @@ class Trajectory(object):
                     break
             states[:,tidx] = prev_state
         return states
+
+    # TODO Consider functionality for selective omission of history
+    def clone(self, num_clones, weights=None):
+        """
+        Copy this trajectory to obtain num_clones _total_ trajectories.
+
+        This method creates copies identical to this trajectory, in the
+        sense that the copies have identical history up to the current
+        trajectory time.
+
+        Parameters:
+            num_clones  The _total_ number of identical trajectories to
+                        produce (including this one!).
+
+        Optional Parameters:
+            weights     The weights to assign to the group of
+                        trajectories. May be either a number, a list of
+                        length num_clones, or None.
+                        If None, each trajectory (including this one) is
+                        assigned the weight self.weight / num_clones.
+                        If a number, each trajectory is assigned that
+                        number as a weight.
+                        If a list, each trajectory will be assigned a
+                        unique element of the list as a weight.
+                        Default None.
+
+        Returns:
+            A list of trajectories of length num_clones. If weights was
+            specified as a list, the weights of the output trajectories
+            will be in the same order as that list.
+
+        """
+        if num_clones < 1:
+            raise ValueError("Must specify a positive number of clones.")
+        clones = []
+        if not np.isscalar(weight) and np.asarray(weight).size != num_clones:
+            raise ValueError("Weight list must be of the same size as the " +
+                             "number of clones.")
+        for cidx in range(num_clones):
+            new_clone = Trajectory(self.history[1][0], self.rxns,
+                                   init_time=self.history[0][0])
+            # A deep copy is probably not necessary here, as the past
+            # history should not be modified.
+            new_clone.history[0] = list(self.history[0])
+            new_clone.history[1] = list(self.history[1])
+            if weight is None:
+                new_clone.weight = self.weight / num_clones
+            elif np.isscalar(weight):
+                new_clone.weight = weight
+            else:
+                new_clone.weight = weight[cidx]
+            clones.append(new_clone)
+        return clones
 
     def __str__(self):
         msg = ("Trajectory at time " + str(self.time) +
