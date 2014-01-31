@@ -404,12 +404,12 @@ class Trajectory(object):
             raise ValueError("Weight list must be of the same size as the " +
                              "number of clones.")
         for cidx in range(num_clones):
-            new_clone = Trajectory(self.history[1][0], self.rxns,
-                                   init_time=self.history[0][0])
+            new_clone = Trajectory(self.hist_states[0], self.rxns,
+                                   init_time=self.hist_times[0])
             # A deep copy is probably not necessary here, as the past
             # history should not be modified.
-            new_clone.history[0] = list(self.history[0])
-            new_clone.history[1] = list(self.history[1])
+            new_clone.hist_times = list(self.hist_times)
+            new_clone.hist_states = list(self.hist_states)
             if weight is None:
                 new_clone.weight = self.weight / num_clones
             elif np.isscalar(weight):
