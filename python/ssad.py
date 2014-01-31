@@ -9,9 +9,9 @@ Classes:
 
 """
 
-#import heapq
 import functools
 import bisect
+import pdb
 from collections import defaultdict
 
 import numpy as np
@@ -150,7 +150,8 @@ class Trajectory(object):
         self.history = ([self.time], [self.state])
         self.next_rxn = None
         self.next_rxn_time = None
-        #self.rxn_tallies = defaultdict(lambda: 0)
+        self.rxn_tallies = defaultdict(lambda: 0)
+        self.reject_tallies = defaultdict(lambda: 0)
 
     # TODO Systematically test restart capability
     def run_dynamics(self, duration, max_steps=None):
@@ -211,6 +212,9 @@ class Trajectory(object):
                     break
                 else:
                     self._execute_rxn(next_rxn, next_rxn_time)
+            else:
+                self.reject_tallies[next_rxn] += 1
+
             # If the reaction can't run, wait until the next cycle and
             # select another.
 
@@ -250,14 +254,15 @@ class Trajectory(object):
         state as it was (delay) time units ago.
 
         """
+        #pdb.set_trace()
         propensities = np.empty((len(self.reactions)))
         for ridx, rxn in enumerate(self.reactions):
             if rxn.delay == 0.0:
-                propensities[ridx] = rxn.calc_propensity(self.state)
+                state = self.state
             else:
-                propensities[ridx] = self.sample_state(
-                        self.time - rxn.delay,
-                        use_init_state = True)
+                state = self.sample_state(
+                    self.time - rxn.delay, use_init_state = True)
+            propensities[ridx] = rxn.calc_propensity(state)
         prop_csum = np.cumsum(propensities)
         total_prop = prop_csum[-1]
         wait_time = exponential(1.0 / total_prop)
@@ -275,7 +280,7 @@ class Trajectory(object):
         self.time = time
         self.history[0].append(self.time)
         self.history[1].append(self.state)
-        #self.rxn_tallies[rxn] += 1
+        self.rxn_tallies[rxn] += 1
 
     def _save_run_state(self, rxn, time):
         """Save the trajectory state before pausing."""
