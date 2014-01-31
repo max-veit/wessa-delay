@@ -148,7 +148,8 @@ class Trajectory(object):
         self.init_time = init_time
         self.time = init_time
         self.rxn_counter = 0
-        self.history = ([self.time], [self.state])
+        self.hist_times= [self.time]
+        self.hist_states = [self.state]
         self.next_rxn = None
         self.next_rxn_time = None
         self.rxn_tallies = defaultdict(lambda: 0)
@@ -279,8 +280,8 @@ class Trajectory(object):
         self.rxn_counter += 1
         self.state = self.state + rxn.state_vec
         self.time = time
-        self.history[0].append(self.time)
-        self.history[1].append(self.state)
+        self.hist_times.append(self.time)
+        self.hist_states.append(self.state)
         self.rxn_tallies[rxn] += 1
 
     def _save_run_state(self, rxn, time):
@@ -314,10 +315,10 @@ class Trajectory(object):
                                   not use_init_state):
             raise ValueError("Out-of-bounds time " + str(time) + " received.")
         if (time < self.init_time) and use_init_state:
-            return self.history[1][0]
-        idx = bisect.bisect_right(self.history[0], time)
+            return self.hist_states[0]
+        idx = bisect.bisect_right(self.hist_times, time)
         if idx > 0:
-            return (self.history[1])[idx - 1]
+            return (self.hist_states)[idx - 1]
 
     # TODO Implement use_init_state capability (like in sample_state)
     def sample_state_seq(self, times):
@@ -346,8 +347,8 @@ class Trajectory(object):
             raise ValueError("First time " + str(times[0]) + " is earlier " +
                              "than the trajectory's starting time.")
         states = np.empty((self.state.size, times.size))
-        hist_times = iter(self.history[0])
-        hist_states = iter(self.history[1])
+        hist_times = iter(self.hist_times)
+        hist_states = iter(self.hist_states)
         # Don't do exception handling - each history has at least one element
         curr_time = next(hist_times)
         curr_state = next(hist_states)
