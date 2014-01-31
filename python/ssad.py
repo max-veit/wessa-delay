@@ -313,7 +313,6 @@ class Trajectory(object):
         if idx > 0:
             return (self.history[1])[idx - 1]
 
-    # TODO Validate sampling
     # TODO Implement use_init_state capability (like in sample_state)
     def sample_state_seq(self, times):
         """
