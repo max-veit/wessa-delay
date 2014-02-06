@@ -50,7 +50,9 @@ class UniformPaving(Paving):
     """
 
     def __init__(self, low_bound, up_bound, bin_counts):
-        pass
+        self.low_bound = low_bound
+        self.up_bound = up_bound
+        self.bin_counts = bin_counts
 
     def get_bin_num(self, coords):
         pass
