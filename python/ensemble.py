@@ -88,6 +88,33 @@ class Ensemble(object):
             bin_no = paving.get_bin_num(traj.state)
             self.bins[bin_no].append(traj)
 
+    def _run_dynamics_all(self):
+        """
+        Advance all trajectories in time.
+
+        In principle, this can be done in parallel - for now, though,
+        it done serially.
+
+        """
+        for traj in self.trajs:
+            traj.run_dynamics(self.step_time)
+
+    def _resample(self):
+        """Resample the phase space by modifying the bin populations."""
+        for bin_id, trajs in self.bins.items():
+            if len(trajs) > self.bin_pop_range[1]:
+                self._reduce_bin(bin_id, trajs, self.bin_pop_range[1])
+            elif len(trajs) < self.bin_pop_range[0] and len(trajs) != 0:
+                self._grow_bin(bin_id, trajs, self.bin_pop_range[0])
+
+    def _reduce_bin(self, bin_id, trajs, target_pop):
+        """Combine trajectories to reduce the population of a bin."""
+        raise NotImplementedError()
+
+    def _grow_bin(self, bin_id, trajs, target_pop):
+        """Split trajectories to increase the population of a bin."""
+        raise NotImplementedError()
+
 
 # TODO Make abstract class?
 class Paving(object):
