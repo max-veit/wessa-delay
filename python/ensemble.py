@@ -6,26 +6,100 @@ state, or configuration) space to ensure more even sampling across
 the entire space. This is particularly useful for getting information
 about less-visited parts of the space.
 
+Throughout this file, the term "phase space" is used as a proxy for the
+space in which the system is evolving (i.e. the space it is exploring),
+be it classical phase space, chemical concentration space, or anything
+else along the same lines.
+
 Classes:
     Ensemble    The base encapsulation of a weighted ensemble
     Paving      Functionality related to binning of the phase space
 
 """
 
+from collections import defaultdict
+
 import numpy as np
 
 
 class Ensemble(object):
-    pass
+    """
+    An ensemble of weighted trajectories in phase space.
+
+    The weighted-ensemble method allows one to more completely and
+    accurately sample the probability distribution of a system over
+    phase space. The method uses periodic resampling to equalize the
+    distribution of samples over phase space, obtaining a more accurate
+    estimate of the distribution in less-visited regions of the space.
+
+    Public methods:
+        run_step        Run one step of the weighted-ensemble algorithm.
+        run_time        Run weighted-ensemble for a specified sim. time.
+
+    Public Properties:
+        coords          List of coords of all traj.s in the ensemble.
+        step_time       Duration traj.s are advanced each large step.
+        history         The complete history of ensemble coordinates.
+
+    More on the history once I implement it.
+
+    """
+
+    def __init__(self, step_time, paving, bin_pop_range, init_trajs):
+        """
+        Create a weighted ensemble of trajectories in phase space.
+
+        Parameters:
+            step_time       The duration of a timestep, i.e. the time
+                            between periodic resampling pauses.
+            paving          The paving to be used to bin the phase
+                            space. Must provide a get_bin_num function
+                            that, given a set of coordinates in phase
+                            space, returns a consistent bin ID (i.e.
+                            for any one set of coordinates, it always
+                            returns the same ID).
+            bin_pop_range   Range of permissible bin traj. counts in the
+                            form of a tuple (min, max). If any one bin
+                            count is found to be below min and nonzero
+                            during the resampling step, the trajectories
+                            there are replicated until this number is
+                            reached. If a population is above max,
+                            traj.s are merged unti max is reached.
+            init_trajs      Initial set of trajectories to seed the
+                            algorithm.
+
+        """
+        self.step_time = step_time
+        self.paving = paving
+        self.trajs = init_trajs
+        self.bin_pop_range = bin_pop_range
+        self._recompute_bins()
+
+    def _recompute_bins(self):
+        """
+        Recompute bin numbers for all trajectories.
+
+        Also rebuild the data structure relating bins to trajectories.
+
+        """
+        self.bins = defaultdict(lambda: [])
+        for traj in self.trajs:
+            #TODO More robust, generalizable way of getting coords from traj.s?
+            bin_no = paving.get_bin_num(traj.state)
+            self.bins[bin_no].append(traj)
 
 
 # TODO Make abstract class?
 class Paving(object):
+
     """
     Functionality associated with a paving of phase space.
 
     Public methods:
         get_bin_num     Return the bin index for a given state
+
+    Public properties:
+        num_bins        The total number of bins in the paving.
 
     """
 
@@ -37,10 +111,11 @@ class Paving(object):
 
 
 class UniformPaving(Paving):
+
     """
     A paving of phase space that is uniform in every dimension.
 
-    The binning is delimited by a rectangular region in phase space.
+    The paving is delimited by a rectangular region in phase space.
     Coordinates outside this region are considered to belong to the
     bin closest to that point.
 
@@ -63,7 +138,10 @@ class UniformPaving(Paving):
     of the multidimensional bin array (but is subject to change).
 
     Public methods:
-        get_bin_num     Return the bin index for a given state
+        get_bin_num     Return the bin index for a given state.
+
+    Public properties:
+        num_bins        The total number of bins in the paving.
 
     """
 
@@ -88,6 +166,7 @@ class UniformPaving(Paving):
         self.bin_counts = np.asarray(bin_counts)
         if any(self.bin_counts <= 0):
             raise ValueError("Must specify at least one bin in each dimension")
+        self.num_bins = np.prod(self.bin_counts)
 
     def get_bin_num(self, coords):
         """
@@ -117,7 +196,6 @@ class UniformPaving(Paving):
                        (self.up_bound - self.low_bound))
         int_coords = np.empty(coords_norm.shape, dtype='int64')
         np.floor(coords_norm * self.bin_counts, int_coords)
-
         return np.ravel_multi_index(int_coords.transpose(), self.bin_counts,
                                     mode='clip')
 
