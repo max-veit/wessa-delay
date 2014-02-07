@@ -19,15 +19,19 @@ Classes:
 
 """
 
+
 import functools
 from heapq import heappush, heappop
 from collections import defaultdict
 
 import numpy as np
 
+from ssad import Trajectory
+
 
 @functools.total_ordering
 class WeightedTrajectory(Trajectory):
+
     """
     A trajectory with a weight and comparison operators based on weight.
 
@@ -62,7 +66,7 @@ class WeightedTrajectory(Trajectory):
 
         """
         super(WeightedTrajectory, self).__init__(
-                state, reactions, weight, init_time)
+                state, reactions, init_time)
         self.weight = weight
 
     def __lt__(self, other):
@@ -72,6 +76,7 @@ class WeightedTrajectory(Trajectory):
         return (self.weight == other.weight)
 
 class Ensemble(object):
+
     """
     An ensemble of weighted trajectories in phase space.
 
@@ -85,6 +90,9 @@ class Ensemble(object):
         run_step        Run one step of the weighted-ensemble algorithm.
         run_time        Run weighted-ensemble for a specified sim. time.
 
+    Also implements the iterator protocol, which iterates over al the
+    trajectories in the ensemble (in no predetermined order).
+
     Public attributes:
         coords          List of coords of all traj.s in the ensemble.
         step_time       Duration traj.s are advanced each large step.
@@ -94,7 +102,8 @@ class Ensemble(object):
 
     """
 
-    def __init__(self, step_time, paving, bin_pop_range, init_trajs):
+    def __init__(self, step_time, paving, bin_pop_range, init_trajs,
+                 init_time=0.0):
         """
         Create a weighted ensemble of trajectories in phase space.
 
@@ -117,14 +126,58 @@ class Ensemble(object):
             init_trajs      Initial set of (weighted) trajectories to
                             seed the algorithm.
 
+        Optional Parameters:
+            init_time       Starting time for the entire ensemble.
+                            Ideally all the initial trajectories would
+                            also have this value as their init_time, but
+                            the ensemble time is tracked separately from
+                            each trajectory time, so this is not
+                            enforced. Defaults to 0.0.
+
         """
         self.step_time = step_time
+        self.time = init_time
         self.paving = paving
         self.trajs = init_trajs
         ntrajs = len(self.trajs)
         self.bin_pop_range = bin_pop_range
         self._recompute_bins()
         self.clone_num = 2
+
+    def run_step(self):
+        """
+        Run one step of the Weighted Ensemble algorithm.
+
+        A step starts out with a resampling procedure, then runs the
+        dynamics of all constituent trajectories for a time
+        self.step_time.
+
+        """
+        self._resample()
+        self._run_dynamics_all()
+        self.time += self.step_time
+        self._recompute_bins()
+
+    def run_time(self, duration):
+        """
+        Run this trajectory until a specified time is reached.
+
+        If the end time is between timesteps, the last step to be run
+        will be the latest one ending before the stop time.
+
+        Parameters:
+            duration    Amount of time the trajectory will be run. This
+                        will be added to the current time to obtain the
+                        stop time.
+
+        Returns:
+            The ensemble time at the end of the last step.
+
+        """
+        stop_time = self.time + duration
+        while self.time < stop_time:
+            self.run_step()
+        return self.time
 
     def _recompute_bins(self):
         """
@@ -136,8 +189,13 @@ class Ensemble(object):
         self.bins = defaultdict(lambda: [])
         for traj in self.trajs:
             #TODO More robust, generalizable way of getting coords from traj.s?
-            bin_no = paving.get_bin_num(traj.state)
+            bin_no = self.paving.get_bin_num(traj.state)
             heappush(self.bins[bin_no], traj)
+
+    def __iter__(self):
+        """Iterate over all trajectories in the ensemble."""
+        for bin_no, trajs in self.bins.items():
+            yield from trajs
 
     def _run_dynamics_all(self):
         """
@@ -147,7 +205,7 @@ class Ensemble(object):
         it is done serially.
 
         """
-        for traj in self.trajs:
+        for traj in self:
             traj.run_dynamics(self.step_time)
 
     def _resample(self):
@@ -176,7 +234,8 @@ class Ensemble(object):
             traj_split = max(trajs)
             clones = traj_split.clone(self.clone_num)
             traj_split.weight = clones[0].weight
-            heappush(clones[1])
+            for cidx in range(self.clone_num - 1):
+                heappush(trajs, clones[cidx+1])
 
 
 # TODO Make abstract class?
@@ -250,11 +309,11 @@ class UniformPaving(Paving):
         """
         self.low_bound = np.asarray(low_bound)
         self.up_bound = np.asarray(up_bound)
-        if any((self.up_bound - self.low_bound) <= 0):
+        if np.any((self.up_bound - self.low_bound) <= 0):
             raise ValueError("Each upper bound must be greater than the " +
                              "corresponding lower bound.")
         self.bin_counts = np.asarray(bin_counts)
-        if any(self.bin_counts <= 0):
+        if np.any(self.bin_counts <= 0):
             raise ValueError("Must specify at least one bin in each dimension")
         self.num_bins = np.prod(self.bin_counts)
 

@@ -17,7 +17,10 @@ from collections import defaultdict
 import numpy as np
 from numpy.random import exponential, random
 
+from ensemble import WeightedTrajectory
 
+
+# TODO Implement capability to generate reverse reaction
 class Reaction(object):
     """
     Encapsulation of information about a reaction pathway.
@@ -399,22 +402,23 @@ class Trajectory(object):
         if num_clones < 1:
             raise ValueError("Must specify a positive number of clones.")
         clones = []
-        if not np.isscalar(weight) and np.asarray(weight).size != num_clones:
-            raise ValueError("Weight list must be of the same size as the " +
-                             "number of clones.")
+        #if not np.isscalar(weights) and np.asarray(weights).size != num_clones:
+        #    raise ValueError("Weight list must be of the same size as the " +
+        #                     "number of clones.")
         for cidx in range(num_clones):
-            new_clone = Trajectory(self.hist_states[0], self.rxns,
+            # TODO Hack! Move to WeightedTrajectory.
+            new_clone = WeightedTrajectory(self.hist_states[0], self.reactions, 1,
                                    init_time=self.hist_times[0])
             # A deep copy is probably not necessary here, as the past
             # history should not be modified.
             new_clone.hist_times = list(self.hist_times)
             new_clone.hist_states = list(self.hist_states)
-            if weight is None:
+            if weights is None:
                 new_clone.weight = self.weight / num_clones
-            elif np.isscalar(weight):
+            elif np.isscalar(weights):
                 new_clone.weight = weight
             else:
-                new_clone.weight = weight[cidx]
+                new_clone.weight = weights[cidx]
             clones.append(new_clone)
         return clones
 
