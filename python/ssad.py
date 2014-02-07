@@ -125,7 +125,7 @@ class Trajectory(object):
 
     """
 
-    def __init__(self, state, reactions, weight=1, init_time=0.0):
+    def __init__(self, state, reactions, init_time=0.0):
         """
         Initialize a new trajectory.
 
@@ -136,14 +136,11 @@ class Trajectory(object):
                         dynamics.
 
         Optional Parameters:
-            weight      Initial statistical weight of this trajectory, useful
-                        in ensemble methods. Defaults to 1.
             init_time   Simulation time at which this trajectory starts.
                         Defaults to 0.0 time units.
 
         """
         self.state = np.asarray(state)
-        self.weight = weight
         self.reactions = reactions
         self.init_time = init_time
         self.time = init_time
@@ -367,6 +364,8 @@ class Trajectory(object):
         return states
 
     # TODO Consider functionality for selective omission of history
+    # TODO Remove weight functionality; let WeightedTrajectory deal
+    #      with that.
     def clone(self, num_clones, weights=None):
         """
         Copy this trajectory to obtain num_clones _total_ trajectories.

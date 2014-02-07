@@ -12,15 +12,64 @@ be it classical phase space, chemical concentration space, or anything
 else along the same lines.
 
 Classes:
+    WeightedTrajectory
+                A trajectory with a weight attached to it.
     Ensemble    The base encapsulation of a weighted ensemble
     Paving      Functionality related to binning of the phase space
 
 """
 
+import functools
+from heapq import heappush, heappop
 from collections import defaultdict
 
 import numpy as np
 
+
+@functools.total_ordering
+class WeightedTrajectory(Trajectory):
+    """
+    A trajectory with a weight and comparison operators based on weight.
+
+    Inherits ssad.Trajectory. The only changes are summarized below:
+
+    Public attributes:
+        weight  The statistical weight of this trajectory.
+
+    Public methods:
+    Comparison operators are implemented and are based on weight.
+    Two weighted trajectories compare exactly as their weights,
+    e.g. (wtrj1 <= wtrj2) == (wtrj1.weight <= wtrj2.weight).
+
+    """
+
+    def __init__(self, state, reactions, weight, init_time=0.0):
+        """
+        Initialize a new weighted trajectory.
+
+        Parameters:
+            state       Initial state vector. Indices represent species
+                        indices, values are the populations of those
+                        species.
+            reactions   List of reaction pathways that govern this
+                        trajectory's dynamics.
+            weight      Initial statistical weight of this trajectory.
+                        Defaults to 1.
+
+        Optional Parameters:
+            init_time   Simulation time at which this trajectory starts.
+                        Defaults to 0.0 time units.
+
+        """
+        super(WeightedTrajectory, self).__init__(
+                state, reactions, weight, init_time)
+        self.weight = weight
+
+    def __lt__(self, other):
+        return (self.weight < other.weight)
+
+    def __eq__(self, other):
+        return (self.weight == other.weight)
 
 class Ensemble(object):
     """
@@ -36,7 +85,7 @@ class Ensemble(object):
         run_step        Run one step of the weighted-ensemble algorithm.
         run_time        Run weighted-ensemble for a specified sim. time.
 
-    Public Properties:
+    Public attributes:
         coords          List of coords of all traj.s in the ensemble.
         step_time       Duration traj.s are advanced each large step.
         history         The complete history of ensemble coordinates.
@@ -65,15 +114,17 @@ class Ensemble(object):
                             there are replicated until this number is
                             reached. If a population is above max,
                             traj.s are merged unti max is reached.
-            init_trajs      Initial set of trajectories to seed the
-                            algorithm.
+            init_trajs      Initial set of (weighted) trajectories to
+                            seed the algorithm.
 
         """
         self.step_time = step_time
         self.paving = paving
         self.trajs = init_trajs
+        ntrajs = len(self.trajs)
         self.bin_pop_range = bin_pop_range
         self._recompute_bins()
+        self.clone_num = 2
 
     def _recompute_bins(self):
         """
@@ -86,14 +137,14 @@ class Ensemble(object):
         for traj in self.trajs:
             #TODO More robust, generalizable way of getting coords from traj.s?
             bin_no = paving.get_bin_num(traj.state)
-            self.bins[bin_no].append(traj)
+            heappush(self.bins[bin_no], traj)
 
     def _run_dynamics_all(self):
         """
         Advance all trajectories in time.
 
         In principle, this can be done in parallel - for now, though,
-        it done serially.
+        it is done serially.
 
         """
         for traj in self.trajs:
@@ -109,11 +160,23 @@ class Ensemble(object):
 
     def _reduce_bin(self, bin_id, trajs, target_pop):
         """Combine trajectories to reduce the population of a bin."""
-        raise NotImplementedError()
+        while len(trajs) > target_pop:
+            traj_minwt = heappop(trajs)
+            absorber = min(trajs)
+            absorber.weight += traj_minwt.weight
 
     def _grow_bin(self, bin_id, trajs, target_pop):
         """Split trajectories to increase the population of a bin."""
-        raise NotImplementedError()
+        while len(trajs) < target_pop:
+            """
+            Ideally, I would remove the largest element - but there
+            doesn't seem to be a good way to do that. This is still
+            a rather ad-hoc solution.
+            """
+            traj_split = max(trajs)
+            clones = traj_split.clone(self.clone_num)
+            traj_split.weight = clones[0].weight
+            heappush(clones[1])
 
 
 # TODO Make abstract class?
