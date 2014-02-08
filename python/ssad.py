@@ -366,10 +366,7 @@ class Trajectory(object):
             states[:,tidx] = prev_state
         return states
 
-    # TODO Consider functionality for selective omission of history
-    # TODO Remove weight functionality; let WeightedTrajectory deal
-    #      with that.
-    def clone(self, num_clones, weights=None):
+    def clone(self, num_clones):
         """
         Copy this trajectory to obtain num_clones _total_ trajectories.
 
@@ -379,46 +376,21 @@ class Trajectory(object):
 
         Parameters:
             num_clones  The _total_ number of identical trajectories to
-                        produce (including this one!).
-
-        Optional Parameters:
-            weights     The weights to assign to the group of
-                        trajectories. May be either a number, a list of
-                        length num_clones, or None.
-                        If None, each trajectory (including this one) is
-                        assigned the weight self.weight / num_clones.
-                        If a number, each trajectory is assigned that
-                        number as a weight.
-                        If a list, each trajectory will be assigned a
-                        unique element of the list as a weight.
-                        Default None.
+                        produce.
 
         Returns:
-            A list of trajectories of length num_clones. If weights was
-            specified as a list, the weights of the output trajectories
-            will be in the same order as that list.
+            A list of trajectories of length num_clones.
 
         """
-        if num_clones < 1:
-            raise ValueError("Must specify a positive number of clones.")
         clones = []
-        #if not np.isscalar(weights) and np.asarray(weights).size != num_clones:
-        #    raise ValueError("Weight list must be of the same size as the " +
-        #                     "number of clones.")
         for cidx in range(num_clones):
-            # TODO Hack! Move to WeightedTrajectory.
-            new_clone = WeightedTrajectory(self.hist_states[0], self.reactions, 1,
+            new_clone = Trajectory(self.hist_states[0], self.reactions,
                                    init_time=self.hist_times[0])
             # A deep copy is probably not necessary here, as the past
             # history should not be modified.
+            # TODO Consider selective omission of history
             new_clone.hist_times = list(self.hist_times)
             new_clone.hist_states = list(self.hist_states)
-            if weights is None:
-                new_clone.weight = self.weight / num_clones
-            elif np.isscalar(weights):
-                new_clone.weight = weight
-            else:
-                new_clone.weight = weights[cidx]
             clones.append(new_clone)
         return clones
 

@@ -41,6 +41,8 @@ class WeightedTrajectory(Trajectory):
         weight  The statistical weight of this trajectory.
 
     Public methods:
+        clone   Override Trajectory.clone; make copies of this traj.
+
     Comparison operators are implemented and are based on weight.
     Two weighted trajectories compare exactly as their weights,
     e.g. (wtrj1 <= wtrj2) == (wtrj1.weight <= wtrj2.weight).
@@ -68,6 +70,62 @@ class WeightedTrajectory(Trajectory):
         super(WeightedTrajectory, self).__init__(
                 state, reactions, init_time)
         self.weight = weight
+
+    def clone(self, num_clones, weights=None):
+        """
+        Copy this trajectory to obtain num_clones _total_ trajectories.
+
+        This method behaves similarly to Trajectory.clone, except
+        weights are handled as described below.
+
+        Parameters:
+            num_clones  The _total_ number of identical trajectories to
+                        produce.
+
+        Optional Parameters:
+            weights     The weights to assign to the group of
+                        trajectories. May be either a number, a list of
+                        length num_clones, or None.
+                        If None, each trajectory (including this one) is
+                        assigned the weight self.weight / num_clones.
+                        If a number, each trajectory is assigned that
+                        number as a weight.
+                        If a list, each trajectory will be assigned a
+                        unique element of the list as a weight.
+                        Default None.
+
+        Returns:
+            A list of trajectories of length num_clones. If weights was
+            specified as a list, the weights of the output trajectories
+            will be in the same order as that list.
+
+        """
+        if num_clones < 1:
+            raise ValueError("Must specify a positive number of clones.")
+        clones = []
+        if weights is not None and
+                np.isscalar(weights) and
+                np.asarray(weights).size != num_clones:
+            raise ValueError("Weight list must be of the same size as the " +
+                             "number of clones.")
+        if weights is None:
+            weights = self.weight / num_clones
+        for cidx in range(num_clones):
+            if np.isscalar(weights):
+                new_weight = weights
+            else:
+                new_clone.weight = weights[cidx]
+            new_clone = WeightedTrajectory(self.hist_states[0],
+                                           self.reactions,
+                                           new_weight,
+                                           init_time=self.hist_times[0])
+            # A deep copy is probably not necessary here, as the past
+            # history should not be modified.
+            # TODO Consider selective omission of history
+            new_clone.hist_times = list(self.hist_times)
+            new_clone.hist_states = list(self.hist_states)
+            clones.append(new_clone)
+        return clones
 
     def __lt__(self, other):
         return (self.weight < other.weight)
