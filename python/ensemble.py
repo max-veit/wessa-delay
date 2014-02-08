@@ -103,9 +103,9 @@ class WeightedTrajectory(Trajectory):
         if num_clones < 1:
             raise ValueError("Must specify a positive number of clones.")
         clones = []
-        if weights is not None and
+        if (weights is not None and
                 np.isscalar(weights) and
-                np.asarray(weights).size != num_clones:
+                np.asarray(weights).size != num_clones):
             raise ValueError("Weight list must be of the same size as the " +
                              "number of clones.")
         if weights is None:

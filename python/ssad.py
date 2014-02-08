@@ -9,16 +9,24 @@ Classes:
 
 """
 
-import functools
+from functools import reduce
 import bisect
 import pdb
 from collections import defaultdict
+from operator import mul
 
 import numpy as np
 from numpy.random import exponential, random
 
-from ensemble import WeightedTrajectory
 
+# Utility functions
+def _combinations(n, r):
+    """Compute the binomial coefficient "n choose r". """
+    if r > n or n < 0 or r < 0:
+        return 0
+    if (n - r) < r:
+        r = n - r
+    return reduce(mul, range(n, n-r, -1), 1) // reduce(mul, range(1, r+1), 1)
 
 # TODO Implement capability to generate reverse reaction
 class Reaction(object):
@@ -30,19 +38,23 @@ class Reaction(object):
 
     """
 
-    def __init__(self, reactants, products, state_vec,
-                 propensity_const, delay=0.0):
+    def __init__(self, reactants, state_vec, propensity_const, delay=0.0):
         """
         Specify a reaction pathway.
 
         Parameters:
-            reactants       Array of IDs (indices) of the reactants involved
-                            in this reaction
-            products        Array of indices of the products of this reaction
-            state_vec       State-change vector. Integer array of same length
-                            as total number of species, which, when added onto
-                            an existing state vector, gives the effect of this
-                            reaction.
+            reactants       Reactant vector. Integer array of same
+                            length as total number of species. The value
+                            of the array at a given index should equal
+                            the number of molecules of the species with
+                            that index that enter the reaction.
+            state_vec       State-change vector. Integer array of same
+                            length as total number of species, which,
+                            when added onto an existing state vector,
+                            gives the effect of this reaction. If the
+                            products of this reaction were to be written
+                            in the same way as reactants, this should be
+                            the same as (products - reactants).
             propensity_const    A constant used in determining the propensity
                             of this reaction. Different meaning for
                             unimolecular, bimolecular, and generation
@@ -52,8 +64,7 @@ class Reaction(object):
                             Default 0.0.
 
         """
-        self.reactants = reactants
-        self.products = products
+        self.reactants = np.asarray(reactants)
         self.state_vec = np.asarray(state_vec)
         self.propensity_const = propensity_const
         self.delay = delay
@@ -64,37 +75,33 @@ class Reaction(object):
     def calc_propensity(self, state):
         """
         Calculate the propensity for this reaction with the given
-        concentrations of the reactants. Currently only supports
-        unimolecular and bimolecular reactions. Higher-order reactions
-        can be expressed as a series of bimolecular reactions.
+        concentrations of the reactants.
 
         Important note: If this reaction is delayed, the caller must
         specify the state as it was at time (t - delay) so that the
         propensity can be calculated correctly.
 
         """
-        if len(self.reactants) == 0:
-            return self.propensity_const
-        elif len(self.reactants) == 1:
-            return self.propensity_const * state[self.reactants[0]]
-        elif len(self.reactants) == 2:
-            if self.reactants[0] == self.reactants[1]:
-                rct_count = state[self.reactants[0]]
-                return (0.5 * rct_count * (rct_count - 1) *
-                        self.propensity_const)
-            else:
-                return (state[self.reactants[0]] *
-                        state[self.reactants[1]] *
-                        self.propensity_const)
-        elif len(reactants) > 2:
-            raise NotImplementedError(
-                    "Reactions with greater than two reactants are " +
-                    "not supported.")
+        propensity_acc = self.propensity_const
+        for species, nreact in enumerate(self.reactants):
+            if nreact == 0:
+                continue
+            elif nreact == 1:
+                propensity_acc *= state[species]
+            elif nreact == 2:
+                propensity_acc *= 0.5 * state[species] * (state[species] - 1)
+            elif nreact > 2:
+                propensity_acc *= _combinations(state[species], nreact)
+        return propensity_acc
+
+    def get_reverse_rxn(self, propensity_const, delay=0.0):
+        """Return a Reaction with the opposite effect as this one."""
+        return Reaction(self.state_vec + self.reactants,
+                        -1*self.state_vec, propensity_const, delay)
 
     # TODO Add capability to use species names
     def __str__(self):
         return ("Reaction taking reactants: " + str(self.reactants) +
-                " to products: " + str(self.products) +
                 " with rate " + str(self.propensity_const) +
                 " and delay " + str(self.delay))
 
