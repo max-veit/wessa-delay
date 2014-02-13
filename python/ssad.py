@@ -155,7 +155,7 @@ class Trajectory(object):
         self.init_time = init_time
         self.time = init_time
         self.rxn_counter = 0
-        self.hist_times= [self.time]
+        self.hist_times = [self.time]
         self.hist_states = [self.state]
         self.next_rxn = None
         self.next_rxn_time = None
@@ -167,6 +167,7 @@ class Trajectory(object):
     #      distribution memoryless? Impact on weighted-ensemble methods?
     #      Delayed reactions (non-Markovian)??
     def run_dynamics(self, duration, max_steps=None):
+
         """
         Run the Gillespie SSA to evolve the initial concentrations in time.
 
@@ -199,13 +200,12 @@ class Trajectory(object):
                         number of steps will be limited only by time.
 
         """
+
         stop_time = self.time + duration
         if max_steps is not None:
             stop_steps = self.rxn_counter + max_steps
-        if (self.next_rxn is not None) and (self.next_rxn_time is not None):
-            resume = True
-        else:
-            resume = False
+        resume = ((self.next_rxn is not None) and
+                  (self.next_rxn_time is not None))
 
         while self.time < stop_time:
             if resume:
@@ -375,29 +375,36 @@ class Trajectory(object):
 
     def clone(self, num_clones):
         """
-        Copy this trajectory to obtain num_clones _total_ trajectories.
+        Copy this trajectory to obtain num_clones _extra_ trajectories.
 
         This method creates copies identical to this trajectory, in the
         sense that the copies have identical history up to the current
         trajectory time.
 
         Parameters:
-            num_clones  The _total_ number of identical trajectories to
-                        produce.
+            num_clones  The number of additional trajectories to
+                        produce. The total number of identical
+                        trajectories will then be num_clones + 1.
 
         Returns:
             A list of trajectories of length num_clones.
 
         """
+        if num_clones < 1:
+            raise ValueError("Must specify a positive number of clones.")
         clones = []
-        for cidx in range(num_clones):
-            new_clone = Trajectory(self.hist_states[0], self.reactions,
-                                   init_time=self.hist_times[0])
+        for cidx in range(num_clones + 1):
+            if cidx == 0:
+                continue
+            new_clone = Trajectory(self.state, self.reactions,
+                                   init_time=self.time)
             # A deep copy is probably not necessary here, as the past
             # history should not be modified.
             # TODO Consider selective omission of history
             new_clone.hist_times = list(self.hist_times)
             new_clone.hist_states = list(self.hist_states)
+            new_clone.next_rxn = self.next_rxn
+            new_clone.next_rxn_time = self.next_rxn_time
             clones.append(new_clone)
         return clones
 
@@ -405,8 +412,8 @@ class Trajectory(object):
         msg = ("Trajectory at time " + str(self.time) +
                " . Current state: " + str(self.state) + ".")
         if self.next_rxn_time is not None:
-            msg += (" Next reaction scheduled for time " +
-                    str(self.next_rxn_time) + ".")
+            msg = ' '.join((msg, "Next reaction scheduled for time",
+                    str(self.next_rxn_time) + "."))
         return msg
 
 if __name__ == "__main__":

@@ -49,6 +49,7 @@ class WeightedTrajectory(Trajectory):
 
     """
 
+    # TODO Make weight a NumPy precision float
     def __init__(self, state, reactions, weight, init_time=0.0):
         """
         Initialize a new weighted trajectory.
@@ -73,25 +74,30 @@ class WeightedTrajectory(Trajectory):
 
     def clone(self, num_clones, weights=None):
         """
-        Copy this trajectory to obtain num_clones _total_ trajectories.
+        Copy this trajectory to obtain num_clones _extra_ trajectories.
 
         This method behaves similarly to Trajectory.clone, except
         weights are handled as described below.
 
         Parameters:
-            num_clones  The _total_ number of identical trajectories to
-                        produce.
+            num_clones  The number of additional trajectories to
+                        produce. The total number of identical
+                        trajectories will then be num_clones + 1.
 
         Optional Parameters:
             weights     The weights to assign to the group of
                         trajectories. May be either a number, a list of
-                        length num_clones, or None.
+                        length (num_clones + 1), or None.
                         If None, each trajectory (including this one) is
-                        assigned the weight self.weight / num_clones.
+                        assigned the weight
+                        self.weight / (num_clones. + 1).
                         If a number, each trajectory is assigned that
                         number as a weight.
                         If a list, each trajectory will be assigned a
-                        unique element of the list as a weight.
+                        unique element of the list as a weight. This
+                        trajectory will take the first element of the
+                        list while the clones will be assigned the
+                        remaining elements.
                         Default None.
 
         Returns:
@@ -102,28 +108,33 @@ class WeightedTrajectory(Trajectory):
         """
         if num_clones < 1:
             raise ValueError("Must specify a positive number of clones.")
-        clones = []
         if (weights is not None and
-                np.isscalar(weights) and
-                np.asarray(weights).size != num_clones):
-            raise ValueError("Weight list must be of the same size as the " +
-                             "number of clones.")
+                not np.isscalar(weights) and
+                np.asarray(weights).size != num_clones + 1):
+            raise ValueError("Weight list must have length equal to the " +
+                             "number of clones plus one.")
         if weights is None:
-            weights = self.weight / num_clones
-        for cidx in range(num_clones):
+            weights = self.weight / (num_clones + 1)
+        clones = []
+        for cidx in range(num_clones + 1):
             if np.isscalar(weights):
                 new_weight = weights
             else:
                 new_clone.weight = weights[cidx]
-            new_clone = WeightedTrajectory(self.hist_states[0],
+            if cidx == 0:
+                self.weight = new_weight
+                continue
+            new_clone = WeightedTrajectory(self.state,
                                            self.reactions,
                                            new_weight,
-                                           init_time=self.hist_times[0])
+                                           init_time=self.time)
             # A deep copy is probably not necessary here, as the past
             # history should not be modified.
             # TODO Consider selective omission of history
             new_clone.hist_times = list(self.hist_times)
             new_clone.hist_states = list(self.hist_states)
+            new_clone.next_rxn = self.next_rxn
+            new_clone.next_rxn_time = self.next_rxn_time
             clones.append(new_clone)
         return clones
 
@@ -132,6 +143,11 @@ class WeightedTrajectory(Trajectory):
 
     def __eq__(self, other):
         return (self.weight == other.weight)
+
+    def __str__(self):
+        msg = super(WeightedTrajectory, self).__str__()
+        msg = ' '.join((msg, "Weight", str(self.weight) + "."))
+        return msg
 
 class Ensemble(object):
 
@@ -148,7 +164,7 @@ class Ensemble(object):
         run_step        Run one step of the weighted-ensemble algorithm.
         run_time        Run weighted-ensemble for a specified sim. time.
 
-    Also implements the iterator protocol, which iterates over al the
+    Also implements the iterator protocol, which iterates over all the
     trajectories in the ensemble (in no predetermined order).
 
     Public attributes:
@@ -196,11 +212,10 @@ class Ensemble(object):
         self.step_time = step_time
         self.time = init_time
         self.paving = paving
-        self.trajs = init_trajs
-        ntrajs = len(self.trajs)
-        self.bin_pop_range = bin_pop_range
+        self.init_trajs = init_trajs
         self._recompute_bins()
-        self.clone_num = 2
+        self.bin_pop_range = bin_pop_range
+        self.clone_num = 1
 
     def run_step(self):
         """
@@ -244,11 +259,16 @@ class Ensemble(object):
         Also rebuild the data structure relating bins to trajectories.
 
         """
-        self.bins = defaultdict(lambda: [])
-        for traj in self.trajs:
+        new_bins = defaultdict(lambda: [])
+        if hasattr(self, 'bins'):
+            trajs = iter(self)
+        else:
+            trajs = iter(self.init_trajs)
+        for traj in trajs:
             #TODO More robust, generalizable way of getting coords from traj.s?
             bin_no = self.paving.get_bin_num(traj.state)
-            heappush(self.bins[bin_no], traj)
+            heappush(new_bins[bin_no], traj)
+        self.bins = new_bins
 
     def __iter__(self):
         """Iterate over all trajectories in the ensemble."""
@@ -275,25 +295,26 @@ class Ensemble(object):
                 self._grow_bin(bin_id, trajs, self.bin_pop_range[0])
 
     def _reduce_bin(self, bin_id, trajs, target_pop):
-        """Combine trajectories to reduce the population of a bin."""
+        """
+        Combine trajectories to reduce the population of a bin.
+
+        May run into problems if target_pop is less than 2 - however,
+        it is assumed this will not be the case.
+
+        """
         while len(trajs) > target_pop:
             traj_minwt = heappop(trajs)
-            absorber = min(trajs)
+            absorber = heappop(trajs)
             absorber.weight += traj_minwt.weight
+            heappush(trajs, absorber)
 
     def _grow_bin(self, bin_id, trajs, target_pop):
         """Split trajectories to increase the population of a bin."""
         while len(trajs) < target_pop:
-            """
-            Ideally, I would remove the largest element - but there
-            doesn't seem to be a good way to do that. This is still
-            a rather ad-hoc solution.
-            """
             traj_split = max(trajs)
             clones = traj_split.clone(self.clone_num)
-            traj_split.weight = clones[0].weight
-            for cidx in range(self.clone_num - 1):
-                heappush(trajs, clones[cidx+1])
+            for clone in clones:
+                heappush(trajs, clone)
 
 
 # TODO Make abstract class?
