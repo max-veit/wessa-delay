@@ -23,6 +23,7 @@ Classes:
 import functools
 from heapq import heappush, heappop
 from collections import defaultdict
+from copy import copy, deepcopy
 
 import numpy as np
 
@@ -131,8 +132,8 @@ class WeightedTrajectory(Trajectory):
             # A deep copy is probably not necessary here, as the past
             # history should not be modified.
             # TODO Consider selective omission of history
-            new_clone.hist_times = list(self.hist_times)
-            new_clone.hist_states = list(self.hist_states)
+            new_clone.hist_times = copy(self.hist_times)
+            new_clone.hist_states = copy(self.hist_states)
             new_clone.next_rxn = self.next_rxn
             new_clone.next_rxn_time = self.next_rxn_time
             clones.append(new_clone)
@@ -212,7 +213,7 @@ class Ensemble(object):
         self.step_time = step_time
         self.time = init_time
         self.paving = paving
-        self.init_trajs = init_trajs
+        self.init_trajs = deepcopy(init_trajs)
         self._recompute_bins()
         self.bin_pop_range = bin_pop_range
         self.clone_num = 1
@@ -405,6 +406,7 @@ class UniformPaving(Paving):
             raise ValueError("Must specify at least one bin in each dimension")
         self.num_bins = np.prod(self.bin_counts)
 
+    # TODO Some bin edges are incorrectly placed by this algorithm. Fix.
     def get_bin_num(self, coords):
         """
         Return the bin number for a given point(s) in phase space.

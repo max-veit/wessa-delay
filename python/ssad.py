@@ -9,17 +9,18 @@ Classes:
 
 """
 
-from functools import reduce
+from functools import reduce, lru_cache
 import bisect
-import pdb
 from collections import defaultdict
 from operator import mul
+from copy import copy, deepcopy
 
 import numpy as np
 from numpy.random import exponential, random
 
 
 # Utility functions
+@lru_cache
 def _combinations(n, r):
     """Compute the binomial coefficient "n choose r". """
     if r > n or n < 0 or r < 0:
@@ -71,7 +72,6 @@ class Reaction(object):
 
     # TODO
     # def read_list_from_file(filename):
-
     def calc_propensity(self, state):
         """
         Calculate the propensity for this reaction with the given
@@ -266,7 +266,6 @@ class Trajectory(object):
         state as it was (delay) time units ago.
 
         """
-        #pdb.set_trace()
         propensities = np.empty((len(self.reactions)))
         for ridx, rxn in enumerate(self.reactions):
             if rxn.delay == 0.0:
