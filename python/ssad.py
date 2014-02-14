@@ -237,6 +237,7 @@ class Trajectory(object):
                         "Trajectory run reached maximum allowed number " +
                         "of steps (limit was " + str(max_steps) + ").")
 
+    # TODO Make more efficient; taking a significant fraction of compute time.
     def _can_run_rxn(self, rxn):
         """
         Determine whether a reaction is allowed to run.

@@ -230,6 +230,7 @@ class Ensemble(object):
         self._run_dynamics_all()
         self.time += self.step_time
         self._recompute_bins()
+        #self._record_state()
 
     def run_time(self, duration):
         """
@@ -269,6 +270,14 @@ class Ensemble(object):
             bin_no = self.paving.get_bin_num(traj.state)
             heappush(new_bins[bin_no], traj)
         self.bins = new_bins
+
+    # TODO Implement history list
+    def _record_state(self):
+        """
+        Record the state in a history list and accumulators.
+
+        """
+        raise NotImplementedError()
 
     def __iter__(self):
         """Iterate over all trajectories in the ensemble."""
