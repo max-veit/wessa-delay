@@ -1,0 +1,115 @@
+\documentclass[english,letterpaper,12pt]{article}
+%\usepackage[margin=1in]{geometry}
+
+%Encoding, fonts, and language
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{fouriernc}
+\usepackage{tgschola}
+\usepackage{babel}
+
+%Text-level formatting
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{multicol}
+\frenchspacing
+
+%Mathematics and symbols
+\usepackage{amsmath}
+%\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{xfrac}
+\usepackage{gensymb}
+\usepackage{textcomp}
+\usepackage{mathtools}
+
+%High-level formatting
+\usepackage[square,numbers]{natbib}
+%\numberwithin{equation}{section}
+
+%Figures
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+%\usepackage[font=scriptsize, it]{caption}
+\usepackage{placeins}
+
+%Gnuplot vector images
+\usepackage{pgf}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usepackage{gnuplot-lua-tikz}
+
+% Source code listings
+\usepackage{listings}
+\usepackage{algorithmic}
+
+% Custom math commands, other shortcuts
+\newcommand{\unit}[1]{\;\mathrm{#1}}
+\newcommand{\unitfr}[2]{\;\frac{\mathrm{#1}}{\mathrm{#2}}}
+\newcommand{\tenexp}[1]{\times10^{#1}}
+\newcommand{\dee}{\;\mathrm{d}}
+\let\oldvec\vec
+\renewcommand{\vec}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\evec}[1]{\ensuremath{\vec{e}_{#1}}} % standard basis vector
+\newcommand{\norm}[2]{\ensuremath{\|#1\|_{#2}}}
+\newcommand{\bignorm}[2]{\ensuremath{\left\|#1\right\|_{#2}}}
+\newcommand{\infnorm}[1]{\ensuremath{\|#1\|_\infty}}
+\newcommand{\reals}{\ensuremath{\mathbb{R}}}
+% Physics Domain-Specific
+\newcommand{\kB}{\ensuremath{k_\mathrm{B}}}
+% General Shortcuts
+\newcommand{\figref}[1]{Figure~\ref{#1}}
+\newcommand{\secref}[1]{Section~\ref{#1}}
+
+\usepackage{lipsum}
+
+% Headers and Footers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{Max Veit\\University of Minnesota}
+\rhead{Simulation of Chemical\\Regulatory Networks}
+\chead[]{}
+\cfoot{\thepage}
+\headheight = 15pt
+
+\begin{document}
+\title{Stochastic Simulation of Chemical Regulatory Networks with Delayed Reactions}
+\author{Max Veit}
+\date{5 May 2014}
+
+\maketitle
+
+\begin{doublespacing}
+
+\lipsum[1-2]
+
+\begin{equation}
+    \langle A \rangle = \frac{1}{Z} \int_\Omega A(\vec{p}, \vec{q}) \exp\left(\frac{-\varepsilon(\vec{p}, \vec{q})}{\kB T}\right) \dee \vec{p} \dee \vec{q}
+\end{equation}
+where
+\begin{equation}
+    Z = \int_\Omega e^{-\varepsilon(\vec{p}, \vec{q}) / \kB T}\dee \vec{p} \dee \vec{q}.
+\end{equation}
+
+The quantity $Z$, usually called the \textbf{partition function}, is sometimes also written as
+\begin{equation}
+    Z = \sum_{s \in \Omega} \exp\left( \frac{-\varepsilon_s}{\kB T} \right)
+    \label{eq:partfun-discrete}
+\end{equation}
+in the case where the phase space is discrete.
+
+Here, $\Omega = \mathbb{R}^{6N}$, where $N$ is the number of particles. The omega represents the probability space, and \emph{does not} stand for anything related to solid angle.
+
+I cite \cite{bistable-modeling}, \cite{we-exact}, \cite{we-chemkin}, and \cite{delay-oscillations} as well as \cite{gillespie-ssa}.
+
+\lipsum[3-4]
+
+\end{doublespacing}
+
+\bibliographystyle{apsrev}
+\bibliography{citations}
+
+\end{document}
+
