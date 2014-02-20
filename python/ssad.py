@@ -29,7 +29,6 @@ def _combinations(n, r):
         r = n - r
     return reduce(mul, range(n, n-r, -1), 1) // reduce(mul, range(1, r+1), 1)
 
-# TODO Implement capability to generate reverse reaction
 class Reaction(object):
     """
     Encapsulation of information about a reaction pathway.
@@ -72,6 +71,7 @@ class Reaction(object):
 
     # TODO
     # def read_list_from_file(filename):
+
     def calc_propensity(self, state):
         """
         Calculate the propensity for this reaction with the given
@@ -116,7 +116,6 @@ class StepsLimitException(Exception):
 
 
 # TODO Replace history sampling with more efficient delayed history trackers
-# TODO Consider changing structure of history data
 class Trajectory(object):
     """
     A single chemical-kinetic trajectory in state (concentration) space.
@@ -162,10 +161,6 @@ class Trajectory(object):
         self.rxn_tallies = defaultdict(lambda: 0)
         self.reject_tallies = defaultdict(lambda: 0)
 
-    # TODO Systematically test restart capability
-    # TODO Rethink storing of next reaction times - isn't the exponential
-    #      distribution memoryless? Impact on weighted-ensemble methods?
-    #      Delayed reactions (non-Markovian)??
     def run_dynamics(self, duration, max_steps=None):
 
         """
