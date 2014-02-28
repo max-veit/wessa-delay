@@ -27,9 +27,11 @@
 \usepackage{gensymb}
 \usepackage{textcomp}
 \usepackage{mathtools}
+\usepackage{siunitx}
 
 %High-level formatting
 \usepackage[square,numbers]{natbib}
+\sisetup{per-mode=symbol}
 %\numberwithin{equation}{section}
 
 %Figures
@@ -50,8 +52,6 @@
 \usepackage{algorithmic}
 
 % Custom math commands, other shortcuts
-\newcommand{\unit}[1]{\;\mathrm{#1}}
-\newcommand{\unitfr}[2]{\;\frac{\mathrm{#1}}{\mathrm{#2}}}
 \newcommand{\tenexp}[1]{\times10^{#1}}
 \newcommand{\dee}{\;\mathrm{d}}
 \let\oldvec\vec
