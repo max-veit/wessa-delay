@@ -106,6 +106,19 @@ in the case where the phase space is discrete.
 
 Here, $\Omega = \mathbb{R}^{6N}$, where $N$ is the number of particles. The omega represents the probability space, and \emph{does not} stand for anything related to solid angle.
 
+The simple production-degradation equilibrium system with a single species $X$ can be written as the following set of reaction equations:
+\begin{align}
+    \varnothing \xrightarrow{k_+} X \\
+    X \xrightarrow {k_-} \varnothing
+    \label{eq:prod-deg-rxn}
+\end{align}
+
+The analytic solution to the associated master equation is (setting the system volume $\Omega$ equal to one):
+\begin{equation}
+    \Prob(x) = \sqrt{\frac{k_-}{2\pi k_+}}\exp\left( -\frac{k_-}{2k_+} \left( x - \frac{k_+}{k_-} \right)^2 \right)
+    \label{eq:prod-deg-ans}
+\end{equation}
+
 I cite \cite{bistable-modeling}, \cite{we-exact}, \cite{we-chemkin}, and \cite{delay-oscillations} as well as \cite{gillespie-ssa}.
 
 \lipsum[3-4]
