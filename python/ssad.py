@@ -9,15 +9,27 @@ Classes:
 
 """
 
-import functools
+from functools import reduce, lru_cache
 import bisect
-import pdb
 from collections import defaultdict
+from operator import mul
+from copy import copy, deepcopy
 
 import numpy as np
 from numpy.random import exponential, random
 
 
+# Utility functions
+@lru_cache
+def _combinations(n, r):
+    """Compute the binomial coefficient "n choose r". """
+    if r > n or n < 0 or r < 0:
+        return 0
+    if (n - r) < r:
+        r = n - r
+    return reduce(mul, range(n, n-r, -1), 1) // reduce(mul, range(1, r+1), 1)
+
+# TODO Implement capability to generate reverse reaction
 class Reaction(object):
     """
     Encapsulation of information about a reaction pathway.
@@ -27,19 +39,23 @@ class Reaction(object):
 
     """
 
-    def __init__(self, reactants, products, state_vec,
-                 propensity_const, delay=0.0):
+    def __init__(self, reactants, state_vec, propensity_const, delay=0.0):
         """
         Specify a reaction pathway.
 
         Parameters:
-            reactants       Array of IDs (indices) of the reactants involved
-                            in this reaction
-            products        Array of indices of the products of this reaction
-            state_vec       State-change vector. Integer array of same length
-                            as total number of species, which, when added onto
-                            an existing state vector, gives the effect of this
-                            reaction.
+            reactants       Reactant vector. Integer array of same
+                            length as total number of species. The value
+                            of the array at a given index should equal
+                            the number of molecules of the species with
+                            that index that enter the reaction.
+            state_vec       State-change vector. Integer array of same
+                            length as total number of species, which,
+                            when added onto an existing state vector,
+                            gives the effect of this reaction. If the
+                            products of this reaction were to be written
+                            in the same way as reactants, this should be
+                            the same as (products - reactants).
             propensity_const    A constant used in determining the propensity
                             of this reaction. Different meaning for
                             unimolecular, bimolecular, and generation
@@ -49,49 +65,43 @@ class Reaction(object):
                             Default 0.0.
 
         """
-        self.reactants = reactants
-        self.products = products
+        self.reactants = np.asarray(reactants)
         self.state_vec = np.asarray(state_vec)
         self.propensity_const = propensity_const
         self.delay = delay
 
     # TODO
     # def read_list_from_file(filename):
-
     def calc_propensity(self, state):
         """
         Calculate the propensity for this reaction with the given
-        concentrations of the reactants. Currently only supports
-        unimolecular and bimolecular reactions. Higher-order reactions
-        can be expressed as a series of bimolecular reactions.
+        concentrations of the reactants.
 
         Important note: If this reaction is delayed, the caller must
         specify the state as it was at time (t - delay) so that the
         propensity can be calculated correctly.
 
         """
-        if len(self.reactants) == 0:
-            return self.propensity_const
-        elif len(self.reactants) == 1:
-            return self.propensity_const * state[self.reactants[0]]
-        elif len(self.reactants) == 2:
-            if self.reactants[0] == self.reactants[1]:
-                rct_count = state[self.reactants[0]]
-                return (0.5 * rct_count * (rct_count - 1) *
-                        self.propensity_const)
-            else:
-                return (state[self.reactants[0]] *
-                        state[self.reactants[1]] *
-                        self.propensity_const)
-        elif len(reactants) > 2:
-            raise NotImplementedError(
-                    "Reactions with greater than two reactants are " +
-                    "not supported.")
+        propensity_acc = self.propensity_const
+        for species, nreact in enumerate(self.reactants):
+            if nreact == 0:
+                continue
+            elif nreact == 1:
+                propensity_acc *= state[species]
+            elif nreact == 2:
+                propensity_acc *= 0.5 * state[species] * (state[species] - 1)
+            elif nreact > 2:
+                propensity_acc *= _combinations(state[species], nreact)
+        return propensity_acc
+
+    def get_reverse_rxn(self, propensity_const, delay=0.0):
+        """Return a Reaction with the opposite effect as this one."""
+        return Reaction(self.state_vec + self.reactants,
+                        -1*self.state_vec, propensity_const, delay)
 
     # TODO Add capability to use species names
     def __str__(self):
         return ("Reaction taking reactants: " + str(self.reactants) +
-                " to products: " + str(self.products) +
                 " with rate " + str(self.propensity_const) +
                 " and delay " + str(self.delay))
 
@@ -125,7 +135,7 @@ class Trajectory(object):
 
     """
 
-    def __init__(self, state, reactions, weight=1, init_time=0.0):
+    def __init__(self, state, reactions, init_time=0.0):
         """
         Initialize a new trajectory.
 
@@ -136,19 +146,16 @@ class Trajectory(object):
                         dynamics.
 
         Optional Parameters:
-            weight      Initial statistical weight of this trajectory, useful
-                        in ensemble methods. Defaults to 1.
             init_time   Simulation time at which this trajectory starts.
                         Defaults to 0.0 time units.
 
         """
         self.state = np.asarray(state)
-        self.weight = weight
         self.reactions = reactions
         self.init_time = init_time
         self.time = init_time
         self.rxn_counter = 0
-        self.hist_times= [self.time]
+        self.hist_times = [self.time]
         self.hist_states = [self.state]
         self.next_rxn = None
         self.next_rxn_time = None
@@ -156,7 +163,11 @@ class Trajectory(object):
         self.reject_tallies = defaultdict(lambda: 0)
 
     # TODO Systematically test restart capability
+    # TODO Rethink storing of next reaction times - isn't the exponential
+    #      distribution memoryless? Impact on weighted-ensemble methods?
+    #      Delayed reactions (non-Markovian)??
     def run_dynamics(self, duration, max_steps=None):
+
         """
         Run the Gillespie SSA to evolve the initial concentrations in time.
 
@@ -189,13 +200,12 @@ class Trajectory(object):
                         number of steps will be limited only by time.
 
         """
+
         stop_time = self.time + duration
         if max_steps is not None:
             stop_steps = self.rxn_counter + max_steps
-        if (self.next_rxn is not None) and (self.next_rxn_time is not None):
-            resume = True
-        else:
-            resume = False
+        resume = ((self.next_rxn is not None) and
+                  (self.next_rxn_time is not None))
 
         while self.time < stop_time:
             if resume:
@@ -214,11 +224,10 @@ class Trajectory(object):
                     break
                 else:
                     self._execute_rxn(next_rxn, next_rxn_time)
-            else:
-                self.reject_tallies[next_rxn] += 1
-
             # If the reaction can't run, wait until the next cycle and
             # select another.
+            else:
+                self.reject_tallies[next_rxn] += 1
 
             # This may not stop the trajectory _exactly_ at the limit, but
             # that's not a big problem right now.
@@ -228,6 +237,7 @@ class Trajectory(object):
                         "Trajectory run reached maximum allowed number " +
                         "of steps (limit was " + str(max_steps) + ").")
 
+    # TODO Make more efficient; taking a significant fraction of compute time.
     def _can_run_rxn(self, rxn):
         """
         Determine whether a reaction is allowed to run.
@@ -256,7 +266,6 @@ class Trajectory(object):
         state as it was (delay) time units ago.
 
         """
-        #pdb.set_trace()
         propensities = np.empty((len(self.reactions)))
         for ridx, rxn in enumerate(self.reactions):
             if rxn.delay == 0.0:
@@ -364,12 +373,47 @@ class Trajectory(object):
             states[:,tidx] = prev_state
         return states
 
+    def clone(self, num_clones):
+        """
+        Copy this trajectory to obtain num_clones _extra_ trajectories.
+
+        This method creates copies identical to this trajectory, in the
+        sense that the copies have identical history up to the current
+        trajectory time.
+
+        Parameters:
+            num_clones  The number of additional trajectories to
+                        produce. The total number of identical
+                        trajectories will then be num_clones + 1.
+
+        Returns:
+            A list of trajectories of length num_clones.
+
+        """
+        if num_clones < 1:
+            raise ValueError("Must specify a positive number of clones.")
+        clones = []
+        for cidx in range(num_clones + 1):
+            if cidx == 0:
+                continue
+            new_clone = Trajectory(self.state, self.reactions,
+                                   init_time=self.time)
+            # A deep copy is probably not necessary here, as the past
+            # history should not be modified.
+            # TODO Consider selective omission of history
+            new_clone.hist_times = list(self.hist_times)
+            new_clone.hist_states = list(self.hist_states)
+            new_clone.next_rxn = self.next_rxn
+            new_clone.next_rxn_time = self.next_rxn_time
+            clones.append(new_clone)
+        return clones
+
     def __str__(self):
         msg = ("Trajectory at time " + str(self.time) +
                " . Current state: " + str(self.state) + ".")
         if self.next_rxn_time is not None:
-            msg += (" Next reaction scheduled for time " +
-                    str(self.next_rxn_time) + ".")
+            msg = ' '.join((msg, "Next reaction scheduled for time",
+                    str(self.next_rxn_time) + "."))
         return msg
 
 if __name__ == "__main__":

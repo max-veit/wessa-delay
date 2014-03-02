@@ -1,0 +1,8 @@
+# Standard LaTeX/BibTeX ignore file
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+# And yes, the PDF can be regenerated, too.
+*.pdf
