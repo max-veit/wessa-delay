@@ -21,7 +21,7 @@
 
 %Mathematics and symbols
 \usepackage{amsmath}
-%\usepackage{amssymb}
+\usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{xfrac}
 \usepackage{gensymb}
@@ -61,6 +61,7 @@
 \newcommand{\bignorm}[2]{\ensuremath{\left\|#1\right\|_{#2}}}
 \newcommand{\infnorm}[1]{\ensuremath{\|#1\|_\infty}}
 \newcommand{\reals}{\ensuremath{\mathbb{R}}}
+\DeclareMathOperator{\Prob}{P}
 % Physics Domain-Specific
 \newcommand{\kB}{\ensuremath{k_\mathrm{B}}}
 % General Shortcuts
@@ -87,7 +88,15 @@
 
 \begin{doublespacing}
 
+\setcounter{section}{-1}
+
+\section{Preview Material} % (fold)
+\label{sec:preview-material}
+
+
 \lipsum[1-2]
+
+
 
 \begin{equation}
     \langle A \rangle = \frac{1}{Z} \int_\Omega A(\vec{p}, \vec{q}) \exp\left(\frac{-\varepsilon(\vec{p}, \vec{q})}{\kB T}\right) \dee \vec{p} \dee \vec{q}
@@ -122,6 +131,63 @@ The analytic solution to the associated master equation is (setting the system v
 I cite \cite{bistable-modeling}, \cite{we-exact}, \cite{we-chemkin}, and \cite{delay-oscillations} as well as \cite{gillespie-ssa}.
 
 \lipsum[3-4]
+
+% section preview-material (end)
+
+\section{Introduction} % (fold)
+\label{sec:introduction}
+% Biochemical networks
+% Chemical kinetics and the Master equation
+%     Reaction rate equations
+% Markovian vs. non-Markovian dynamics
+% Crowded environments
+% section Introduction (end)
+
+\section{Methodology} % (fold)
+\label{sec:methodology}
+
+\subsection{Gillespie SSA} % (fold)
+\label{sub:gillespie-ssa}
+
+% subsection gillespie-ssa (end)
+
+\subsection{Extension to Non-Markovian Dynamics} % (fold)
+\label{sub:non-markovian}
+
+% subsection non-markovian (end)
+
+\subsection{Resampling the Concentration Space} % (fold)
+\label{sub:we-resampling-intro}
+
+% subsection we-resampling-intro (end)
+
+\subsection{Modeling Diffusion and Crowded Environments} % (fold)
+\label{sub:diffusion-crowded}
+
+% subsection diffusion-crowded (end)
+
+\subsection{Verification and Validation} % (fold)
+\label{sub:verification-validation}
+
+% subsection verification-validation (end)
+
+% section Methodology (end)
+
+\section{Model Reaction Systems} % (fold)
+\label{sec:model-systems}
+% TBD
+% section model-systems (end)
+
+\section{Results} % (fold)
+\label{sec:results}
+% TODO
+% Some results available - talk about testing of WE, investigation of delayed-deg system
+% section resultsResults (end)
+
+\section{Conclusions} % (fold)
+\label{sec:conclusions}
+
+% section conclusions (end)
 
 \end{doublespacing}
 
