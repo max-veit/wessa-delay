@@ -136,6 +136,7 @@ class WeightedTrajectory(Trajectory):
             new_clone.hist_states = copy(self.hist_states)
             new_clone.next_rxn = self.next_rxn
             new_clone.next_rxn_time = self.next_rxn_time
+            new_clone.last_rxn_time = self.last_rxn_time
             clones.append(new_clone)
         return clones
 
@@ -229,7 +230,6 @@ class Ensemble(object):
         """
         self._resample()
         self._run_dynamics_all()
-        self.time += self.step_time
         self._recompute_bins()
         #self._record_state()
 
@@ -295,6 +295,7 @@ class Ensemble(object):
         """
         for traj in self:
             traj.run_dynamics(self.step_time)
+        self.time += self.step_time
 
     def _resample(self):
         """Resample the phase space by modifying the bin populations."""

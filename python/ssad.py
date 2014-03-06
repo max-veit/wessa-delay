@@ -158,7 +158,7 @@ class Trajectory(object):
         self.hist_states = [self.state]
         self.next_rxn = None
         self.next_rxn_time = None
-        self.last_rxn_time = None
+        self.last_rxn_time = init_time
         self.rxn_tallies = defaultdict(lambda: 0)
         self.reject_tallies = defaultdict(lambda: 0)
 
@@ -207,6 +207,7 @@ class Trajectory(object):
             if resume:
                 next_rxn = self.next_rxn
                 next_rxn_time = self.next_rxn_time
+                self.time = self.last_rxn_time
                 resume = False
             else:
                 next_rxn, wait_time = self._sample_next_reaction()
@@ -402,6 +403,7 @@ class Trajectory(object):
             new_clone.hist_states = list(self.hist_states)
             new_clone.next_rxn = self.next_rxn
             new_clone.next_rxn_time = self.next_rxn_time
+            new_clone.last_rxn_time = self.last_rxn_time
             clones.append(new_clone)
         return clones
 
