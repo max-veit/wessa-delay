@@ -254,6 +254,36 @@ class Ensemble(object):
             self.run_step()
         return self.time
 
+    def get_pdist(self, paving=None):
+        """
+        Return the probability distribution describing the system.
+
+        The returned (discrete) distribution is the ensemble's
+        approximation to the underlying probability distribution, i.e.
+        the analytical solution to the kinetic Master equation in the
+        case of a chemical kinetics simulation.
+
+        Parameters:
+            paving      The paving defining the regions over which to
+                        integrate the probability distribution
+                        (analogous to bins of a histogram). If None
+                        (the default), the ensemble's internal paving
+                        is used.
+
+        Returns:
+            One-dimensional array, indexed by bin, giving the value of
+            the discrete probability distribution at each bin.
+
+        """
+        if paving is not None:
+            raise NotImplementedError("No support for arbitrary pavings at " +
+                    "this time.")
+        self._recompute_bins()
+        weights = np.zeros((self.paving.num_bins))
+        for bin_id, trjs in self.bins.items():
+            weights[bin_id] = sum(trj.weight for trj in trjs)
+        return weights
+
     def _recompute_bins(self):
         """
         Recompute bin numbers for all trajectories.
@@ -334,6 +364,9 @@ class Paving(object):
     """
     Functionality associated with a paving of phase space.
 
+    Bin indices are assumed to be contiguous, running from 0 up to
+    the number of bins defined (minus 1).
+
     Public methods:
         get_bin_num     Return the bin index for a given state
 
@@ -343,6 +376,9 @@ class Paving(object):
     """
 
     def __init__(self):
+        raise NotImplementedError("Abstract class.")
+
+    def __iter__(self):
         raise NotImplementedError("Abstract class.")
 
     def get_bin_num(self):
