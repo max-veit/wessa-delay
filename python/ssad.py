@@ -29,7 +29,6 @@ def _combinations(n, r):
         r = n - r
     return reduce(mul, range(n, n-r, -1), 1) // reduce(mul, range(1, r+1), 1)
 
-# TODO Implement capability to generate reverse reaction
 class Reaction(object):
     """
     Encapsulation of information about a reaction pathway.
@@ -72,6 +71,7 @@ class Reaction(object):
 
     # TODO
     # def read_list_from_file(filename):
+
     def calc_propensity(self, state):
         """
         Calculate the propensity for this reaction with the given
@@ -116,7 +116,6 @@ class StepsLimitException(Exception):
 
 
 # TODO Replace history sampling with more efficient delayed history trackers
-# TODO Consider changing structure of history data
 class Trajectory(object):
     """
     A single chemical-kinetic trajectory in state (concentration) space.
@@ -159,13 +158,10 @@ class Trajectory(object):
         self.hist_states = [self.state]
         self.next_rxn = None
         self.next_rxn_time = None
+        self.last_rxn_time = init_time
         self.rxn_tallies = defaultdict(lambda: 0)
         self.reject_tallies = defaultdict(lambda: 0)
 
-    # TODO Systematically test restart capability
-    # TODO Rethink storing of next reaction times - isn't the exponential
-    #      distribution memoryless? Impact on weighted-ensemble methods?
-    #      Delayed reactions (non-Markovian)??
     def run_dynamics(self, duration, max_steps=None):
 
         """
@@ -211,6 +207,7 @@ class Trajectory(object):
             if resume:
                 next_rxn = self.next_rxn
                 next_rxn_time = self.next_rxn_time
+                self.time = self.last_rxn_time
                 resume = False
             else:
                 next_rxn, wait_time = self._sample_next_reaction()
@@ -289,6 +286,7 @@ class Trajectory(object):
         self.rxn_counter += 1
         self.state = self.state + rxn.state_vec
         self.time = time
+        self.last_rxn_time = time
         self.hist_times.append(self.time)
         self.hist_states.append(self.state)
         self.rxn_tallies[rxn] += 1
@@ -405,6 +403,7 @@ class Trajectory(object):
             new_clone.hist_states = list(self.hist_states)
             new_clone.next_rxn = self.next_rxn
             new_clone.next_rxn_time = self.next_rxn_time
+            new_clone.last_rxn_time = self.last_rxn_time
             clones.append(new_clone)
         return clones
 
