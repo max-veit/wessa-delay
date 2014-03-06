@@ -158,6 +158,7 @@ class Trajectory(object):
         self.hist_states = [self.state]
         self.next_rxn = None
         self.next_rxn_time = None
+        self.last_rxn_time = None
         self.rxn_tallies = defaultdict(lambda: 0)
         self.reject_tallies = defaultdict(lambda: 0)
 
@@ -284,6 +285,7 @@ class Trajectory(object):
         self.rxn_counter += 1
         self.state = self.state + rxn.state_vec
         self.time = time
+        self.last_rxn_time = time
         self.hist_times.append(self.time)
         self.hist_states.append(self.state)
         self.rxn_tallies[rxn] += 1
