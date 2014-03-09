@@ -1,0 +1,220 @@
+\documentclass[xcolor={usenames,dvipsnames,svgnames}]{beamer}
+\usepackage[utf8]{inputenc}
+%\usepackage{caption}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{multimedia}
+\usepackage{hyperref}
+
+%\AtBeginSection[] { \begin{frame} \frametitle{Table of Contents}
+%\tableofcontents[currentsection] \end{frame} }
+\usetheme{Berlin}
+\usecolortheme{beaver}
+
+% Custom math commands, other shortcuts
+\newcommand{\tenexp}[1]{\times10^{#1}}
+\newcommand{\dee}{\;\mathsf{d}}
+\let\oldvec\vec
+\renewcommand{\vec}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\evec}[1]{\ensuremath{\vec{e}_{#1}}} % standard basis vector
+\newcommand{\norm}[2]{\ensuremath{\|#1\|_{#2}}}
+\newcommand{\bignorm}[2]{\ensuremath{\left\|#1\right\|_{#2}}}
+\newcommand{\infnorm}[1]{\ensuremath{\|#1\|_\infty}}
+\newcommand{\reals}{\ensuremath{\mathbb{R}}}
+\DeclareMathOperator{\Prob}{P}
+% Physics Domain-Specific
+\newcommand{\kB}{\ensuremath{k_\mathrm{B}}}
+% General Shortcuts
+\newcommand{\figref}[1]{Figure~\ref{#1}}
+\newcommand{\secref}[1]{Section~\ref{#1}}
+
+\begin{document}
+\title[Biochemical Networks]{Stochastic Simulation of Biochemical Networks with Delays}
+\author[Max Veit]{Max Veit\\Advisor: Jorge Viñals}
+\date[2014-03-12]{12 March 2014}
+\institute[U of MN]{University of Minnesota}
+\subject{Physics}
+
+\frame{\titlepage}
+
+\begin{frame} \frametitle{Outline}
+%    \tableofcontents[part=1,pausesections]
+	\tableofcontents
+\end{frame}
+
+\section{Introduction} % (fold)
+\label{sec:introduction}
+\begin{frame}
+	\frametitle{Biological Clocks}
+	\begin{itemize}
+            \item Periodic processes within cells
+            \item Understood to be biochemically driven
+            \item \textbf{TODO} Why are they important? What do we want to understand?
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Biochemical Networks}
+    \begin{columns}[c]
+        \begin{column}{0.5\textwidth}
+            \begin{itemize}
+                \item Systems of chemical reactions
+                \item Reactions are interrelated
+                \item Biological examples
+                \item Understanding biological clocks as reaction networks
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{align*}
+                \varnothing \xrightarrow{A} X \\
+                X \xrightarrow {B} \varnothing
+            \end{align*}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Chemical Kinetics}
+    What aspect of these reaction networks is most important for studying biological clocks?
+    \pause
+
+    \emph{Time evolution.}
+    \begin{itemize}
+        \item How fast do the reactions run?
+        \item Periodic, oscillatory behavior?
+        \item Other behaviors (equilibrium, bistable, chaotic)?
+        \item Bifurcations?
+    \end{itemize}
+\end{frame}
+
+% section introduction (end)
+
+\section{Modeling} % (fold)
+\label{sec:modeling}
+
+\begin{frame}
+    \frametitle{Modeling}
+    How do we model biochemical networks in order to study their behavior theoretically?
+\end{frame}
+
+\begin{frame}
+    \frametitle{Reaction Rate Equations}
+    \begin{itemize}
+        \item Continuum limit
+        \item Standard approach for large systems
+        \item Turn chemical equations into differential equations
+        \item Solve using standard techniques
+    \end{itemize}
+    \pause
+    Example:
+    \begin{columns}[c]
+        \begin{column}{0.45\textwidth}
+            \begin{align*}
+                \varnothing \xrightarrow{A} X \\
+                X \xrightarrow {B} \varnothing
+            \end{align*}
+        \end{column}
+        \begin{column}{0.1\textwidth}
+            \huge $\mapsto$
+        \end{column}
+        \begin{column}{0.45\textwidth}
+            \begin{center}
+                $\frac{\dee x(t)}{\dee t} = A - B x(t)$
+
+                so
+
+                $x(t) = \frac{A}{B} + x(0) e^{-B t}$
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Why is a stochastic description necessary?}
+    On a cellular scale, things look different:
+    \hfill
+    \begin{columns}[c]
+        \begin{column}{0.5\textwidth}
+            (Plot of concentration oscillating about a mean)
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{itemize}
+                \item Concentrations oscillate about steady-state values
+                \item Concentrations are discrete (``populations'')
+                \item Noise is essential feature of some systems
+                \item Continuum approximation can even give unphysical results
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Stochastic Chemical Kinetics}
+    Different approach: Describe the evolution of a \emph{probability distribution}
+    \pause
+    
+    Time evolution described by Chemical Master equation (CME):
+    \only<2>{
+        \begin{multline*}
+            \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
+            \sum_{j=1}^{M} \left( W_j(\vec{x} - \vec{s}_j) P(\vec{x} - \vec{s}_j, t | \vec{x}_0, t_0) - W_j(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
+        \end{multline*} 
+    }
+    \only<3>{
+        \begin{multline*}
+            \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
+            \sum_{{\color{BrickRed} j}=1}^{ {\color{BrickRed} M} } \left( W_{\color{BrickRed} j}(\vec{x} - \vec{s}_{\color{BrickRed} j}) P(\vec{x} - \vec{s}_{\color{BrickRed} j}, t | \vec{x}_0, t_0) - W_{\color{BrickRed} j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
+        \end{multline*} 
+    }
+    \only<4>{
+        \begin{multline*}
+            \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
+            \sum_{j=1}^{M} \left( {\color{NavyBlue} W_j}(\vec{x} - \vec{s}_j) P(\vec{x} - \vec{s}_j, t | \vec{x}_0, t_0) - {\color{NavyBlue}W_j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
+        \end{multline*} 
+    }
+    \only<5>{
+        \begin{multline*}
+            \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
+            \sum_{j=1}^{M} \left( {\color{NavyBlue} W_j}(\vec{x} - {\color{ForestGreen} \vec{s}_j}) P(\vec{x} - {\color{ForestGreen} \vec{s}_j}, t | \vec{x}_0, t_0) - {\color{NavyBlue}W_j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
+        \end{multline*} 
+    }
+    \only<3>{$\color{BrickRed} M$ reactions}
+    \only<4-5>{Each reaction has a \emph{propensity} $\color{NavyBlue} W$}
+    \only<5>{and a \emph{state change vector} $\color{ForestGreen} \vec{s}$}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Notes on Chemical Master Equation}
+    \begin{itemize}
+        \item Describes a \emph{Markovian} process\\
+            (evolution depends only on current state)
+
+        \item Assumptions:
+        \begin{itemize}
+            \item Well-stirred system
+            \item Reactions occur instantaneously
+            \item Ideal gas or dilute solution (!)
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+% section modeling (end)
+
+\section{Methodology} % (fold)
+\label{sec:methodology}
+
+% section methodology (end)
+
+\section{Preliminary Results}
+
+\begin{frame}[plain]
+
+\hfill
+    \begin{beamercolorbox}[rounded=true, center, shadow=true,wd=6cm]{title}
+        \huge Questions?
+    \end{beamercolorbox}
+\hfill\hfill
+
+\end{frame}
+
+\end{document}

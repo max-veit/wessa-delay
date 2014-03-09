@@ -1,0 +1,12 @@
+# Standard LaTeX/BibTeX ignore file
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.toc
+# Beamer extra stuff
+*.nav
+*.snm
+# And yes, the PDF can be regenerated, too.
+*.pdf
