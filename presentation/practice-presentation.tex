@@ -1,10 +1,9 @@
 \documentclass[xcolor={usenames,dvipsnames,svgnames}]{beamer}
 \usepackage[utf8]{inputenc}
-%\usepackage{caption}
 \usepackage{graphicx}
 \usepackage{subfigure}
-\usepackage{multimedia}
 \usepackage{hyperref}
+\usepackage{mathtools}
 
 %\AtBeginSection[] { \begin{frame} \frametitle{Table of Contents}
 %\tableofcontents[currentsection] \end{frame} }
@@ -150,37 +149,38 @@
 
 \begin{frame}
     \frametitle{Stochastic Chemical Kinetics}
-    Different approach: Describe the evolution of a \emph{probability distribution}
+    Different approach: Describe the evolution of a \emph{probability distribution}.
     \pause
     
-    Time evolution described by Chemical Master equation (CME):
-    \only<2>{
+    Time evolution described by the chemical master equation (CME):
+    \begin{overprint}
+    \onslide<2>
         \begin{multline*}
             \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
-            \sum_{j=1}^{M} \left( W_j(\vec{x} - \vec{s}_j) P(\vec{x} - \vec{s}_j, t | \vec{x}_0, t_0) - W_j(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
+            \sum_{j=1}^{M} \left( a_j(\vec{x} - \vec{s}_j) P(\vec{x} - \vec{s}_j, t | \vec{x}_0, t_0) - a_j(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
         \end{multline*} 
-    }
-    \only<3>{
+    \onslide<3>
         \begin{multline*}
             \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
-            \sum_{{\color{BrickRed} j}=1}^{ {\color{BrickRed} M} } \left( W_{\color{BrickRed} j}(\vec{x} - \vec{s}_{\color{BrickRed} j}) P(\vec{x} - \vec{s}_{\color{BrickRed} j}, t | \vec{x}_0, t_0) - W_{\color{BrickRed} j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
+            \sum_{{\color{BrickRed} j}=1}^{ {\color{BrickRed} M} } \left( a_{\color{BrickRed} j}(\vec{x} - \vec{s}_{\color{BrickRed} j}) P(\vec{x} - \vec{s}_{\color{BrickRed} j}, t | \vec{x}_0, t_0) - a_{\color{BrickRed} j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
         \end{multline*} 
-    }
-    \only<4>{
+
+        $\color{BrickRed} M$ reactions
+    \onslide<4>
         \begin{multline*}
             \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
-            \sum_{j=1}^{M} \left( {\color{NavyBlue} W_j}(\vec{x} - \vec{s}_j) P(\vec{x} - \vec{s}_j, t | \vec{x}_0, t_0) - {\color{NavyBlue}W_j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
+            \sum_{j=1}^{M} \left( {\color{NavyBlue} a_j}(\vec{x} - \vec{s}_j) P(\vec{x} - \vec{s}_j, t | \vec{x}_0, t_0) - {\color{NavyBlue}a_j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
         \end{multline*} 
-    }
-    \only<5>{
+
+        Each reaction has a \emph{propensity} $\color{NavyBlue} a$
+    \onslide<5>
         \begin{multline*}
             \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
-            \sum_{j=1}^{M} \left( {\color{NavyBlue} W_j}(\vec{x} - {\color{ForestGreen} \vec{s}_j}) P(\vec{x} - {\color{ForestGreen} \vec{s}_j}, t | \vec{x}_0, t_0) - {\color{NavyBlue}W_j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
+            \sum_{j=1}^{M} \left( {\color{NavyBlue} a_j}(\vec{x} - {\color{ForestGreen} \vec{s}_j}) P(\vec{x} - {\color{ForestGreen} \vec{s}_j}, t | \vec{x}_0, t_0) - {\color{NavyBlue}a_j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
         \end{multline*} 
-    }
-    \only<3>{$\color{BrickRed} M$ reactions}
-    \only<4-5>{Each reaction has a \emph{propensity} $\color{NavyBlue} W$}
-    \only<5>{and a \emph{state change vector} $\color{ForestGreen} \vec{s}$}
+
+        Each reaction has a \emph{propensity} $\color{NavyBlue} a$ and a \emph{state change vector} $\color{ForestGreen} \vec{s}$.
+    \end{overprint}
 \end{frame}
 
 \begin{frame}
@@ -189,13 +189,26 @@
         \item Describes a \emph{Markovian} process\\
             (evolution depends only on current state)
 
-        \item Assumptions:
+        \item Assumptions about system:
         \begin{itemize}
-            \item Well-stirred system
             \item Reactions occur instantaneously
+            \item Well-stirred system
             \item Ideal gas or dilute solution (!)
         \end{itemize}
     \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Abstraction: Delayed Reactions}
+    \begin{itemize}
+        \item Biological processes consist of many small reactions
+        \item Often don't want to simulate every step
+        \item Abstract sequence into one reaction with a delay
+    \end{itemize}
+    (Figure: Delayed reactions)
+    \pause
+
+    \emph{Note}: delay breaks Markovian property!
 \end{frame}
 
 % section modeling (end)
@@ -203,9 +216,152 @@
 \section{Methodology} % (fold)
 \label{sec:methodology}
 
+\begin{frame}
+    \frametitle{Methodology}
+    How do we solve the chemical master equation to obtain the time evolution of a stochastic system?
+\end{frame}
+
+\begin{frame}
+    \frametitle{Stochastic Simulation Algorithm (SSA)}
+    Introduced by Daniel Gillespie, 1976.
+
+    Features:
+    \begin{itemize}
+        \item Monte Carlo approach
+        \item Generates a \emph{sample} (``trajectory'')\\
+            of the probability distribution
+        \item Simulates a sequence of reactions
+        \begin{itemize}
+            \item Reaction type and time\\
+                randomly chosen using propensities
+            \item Wait time is exponentially distributed\\
+                (Markovian property)
+        \end{itemize}
+    \end{itemize}
+    Typically use an ensemble of trajectories.
+\end{frame}
+
+\begin{frame}
+    %TODO Call this the ``concentration space'' instead?
+    \frametitle{Undersampling the Phase Space}
+    Trajectories spend lots of time in certain regions of space.
+
+    Other regions get ignored.
+
+    (Figure: Sampling a bimodal distribution)
+\end{frame}
+
+\begin{frame}
+    \frametitle{Resampling Using a Weighted Ensemble}
+    Idea: Assign each trajectory in the ensembe a weight $w_j$.\\
+    Divide the phase space into bins.
+    \begin{columns}[c]
+        \begin{column}{0.5\textwidth}
+            \begin{enumerate}
+                \item Run trajectories for time $t_s$.
+                \item Pause trajectories.\\
+                    In each bin:
+                \pause
+                \begin{itemize}
+                    \item If not enough trajectories,\\
+                        split some.
+                    \pause
+                    \item If too many,\\
+                        combine some.
+                    \pause
+                    \item In any case,\\
+                        \emph{conserve weight} in bin.
+                \end{itemize}
+                \pause
+                \item Repeat.
+            \end{enumerate}
+            \pause
+            Statistical \emph{resampling} procedure.
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            (Sequence of images to illustrate weighted ensemble)
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Conceptual Issues}
+    SSA does not use \emph{uniform} timesteps. How to pause?
+
+    (Figure illustrating non-uniform timesteps)
+
+    Not a problem \emph{if} system is Markovian.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Delays Complicate Things Further}
+    (Figure illustrating delayed reactions)
+
+    From where is delay measured?
+\end{frame}
+
+\begin{frame}
+    \frametitle{(Partial) Resolution}
+    \begin{itemize}
+        \item Not \emph{inaccurate} resampling, just suboptimal\ldots
+        \item Physical standpoint
+        \item Trajectory vs. system
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Numerical Evidence on Resampling}
+    (Plot of Gaussian production-degradation system)
+\end{frame}
+
 % section methodology (end)
 
 \section{Preliminary Results}
+
+\begin{frame}
+    \frametitle{Delayed-Degradation System}
+    \begin{columns}[c]
+        \begin{column}{0.5\textwidth}
+            \begin{align*}
+                \varnothing \xrightarrow{A} X \\
+                X \xrightarrow{B} \varnothing \\
+                X \xRightarrow[(\tau)]{C} \varnothing
+            \end{align*}
+
+            Common model system
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            (Plot of DPD time evln)
+        \end{column}
+    \end{columns}
+\end{frame}
+
+%TODO More complex biological clocks: If plot available, show it.
+
+\begin{frame}
+    \frametitle{Upcoming Goals: Modeling Cells}
+    Cells don't meet assumptions used by the SSA.
+
+    Relax some assumptions:
+    \begin{itemize}
+        \item Crowded environment: modify reaction rates
+        \item Inhomogeneity: introduce diffusion
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Summary and Project Goals}
+    \begin{itemize}
+        \item Adapt weighted-ensemble SSA for delays
+        \item Apply simulation to common model systems
+        \begin{itemize}
+            \item Study system properties
+            \item Validate/challenge common assumptions
+        \end{itemize}
+        \item Use simulation on more complex systems
+        \item More realistically model cells
+    \end{itemize}
+\end{frame}
 
 \begin{frame}[plain]
 
