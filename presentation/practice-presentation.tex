@@ -30,7 +30,7 @@
 \newtheorem{assumption}{Assumption}
 
 \begin{document}
-\title[Biochemical Networks]{Stochastic Simulation of Biological Clocks}
+\title[Genetic Networks]{Stochastic Simulation of Genetic Regulatory Networks}
 \author[Max Veit]{Max Veit\\Advisor: Jorge Viñals}
 \date[2014-03-12]{12 March 2014}
 \institute[U of MN]{University of Minnesota}
@@ -46,18 +46,24 @@
 \section{Introduction} % (fold)
 \label{sec:introduction}
 \begin{frame}
-    \frametitle{Biological Clocks}
+    \frametitle{Epigenetics}
     \begin{columns}[t]
         \begin{column}{0.5\textwidth}
             \begin{itemize}
-                \item Periodic processes within cells
-                \item Essential feature of cellular function
-                \item Understood to be biochemically driven
-                \item Synthetic versions have been studied
+                \item DNA is not the\\
+                    whole story.
+                \item Networks drive cell functions
+                \item Special case:\\
+                    biological clocks
+                \item Synthetic versions\\
+                    have been studied
+                \begin{itemize}
+                    \item Biological circuitry?
+                \end{itemize}
             \end{itemize}
         \end{column}
         \begin{column}[T]{0.5\textwidth}
-            \includegraphics[width=\textwidth]{h_ptc1Pathway.png}
+            \includegraphics[width=0.85\textwidth]{h_circadianPathway.png}
 
             \small (Source: \cite{biocarta})
         \end{column}
@@ -72,7 +78,6 @@
                 \item Systems of chemical reactions
                 \item Reactions are interrelated
                 \item Biological examples
-                \item Understanding biological clocks as reaction networks
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
@@ -86,7 +91,7 @@
 
 \begin{frame}
     \frametitle{Chemical Kinetics}
-    What aspect of these reaction networks is most important for studying biological clocks?
+    What property of these reaction networks is most interesting for understanding genetic networks?
     \pause
 
     \emph{Time evolution.}
