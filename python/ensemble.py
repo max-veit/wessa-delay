@@ -219,7 +219,7 @@ class Ensemble(object):
         self.bin_pop_range = bin_pop_range
         self.clone_num = 1
 
-    def run_step(self):
+    def run_step(self, resample=True):
         """
         Run one step of the Weighted Ensemble algorithm.
 
@@ -227,23 +227,32 @@ class Ensemble(object):
         dynamics of all constituent trajectories for a time
         self.step_time.
 
+        Optional Parameters:
+            resample    Whether to run the resampling procedure at the
+                        beginning of the step. Default True.
+
         """
-        self._resample()
+        if resample:
+            self._resample()
         self._run_dynamics_all()
         self._recompute_bins()
         #self._record_state()
 
-    def run_time(self, duration):
+    def run_time(self, duration, resample):
         """
         Run this trajectory until a specified time is reached.
 
         If the end time is between timesteps, the last step to be run
-        will be the latest one ending before the stop time.
+        will be the latest one starting before the stop time.
 
         Parameters:
             duration    Amount of time the trajectory will be run. This
                         will be added to the current time to obtain the
                         stop time.
+
+        Optional Parameters:
+            resample    Whether to run the resampling procedure at the
+                        beginning of each step. Default True.
 
         Returns:
             The ensemble time at the end of the last step.
@@ -251,7 +260,7 @@ class Ensemble(object):
         """
         stop_time = self.time + duration
         while self.time < stop_time:
-            self.run_step()
+            self.run_step(resample)
         return self.time
 
     def get_pdist(self, paving=None):
@@ -323,9 +332,10 @@ class Ensemble(object):
         it is done serially.
 
         """
+        stop_time = self.time + self.step_time
         for traj in self:
-            traj.run_dynamics(self.step_time)
-        self.time += self.step_time
+            traj.run_dynamics(duration=None, stop_time=stop_time)
+        self.time = stop_time
 
     def _resample(self):
         """Resample the phase space by modifying the bin populations."""

@@ -162,7 +162,7 @@ class Trajectory(object):
         self.rxn_tallies = defaultdict(lambda: 0)
         self.reject_tallies = defaultdict(lambda: 0)
 
-    def run_dynamics(self, duration, max_steps=None):
+    def run_dynamics(self, duration, max_steps=None, stop_time=None):
 
         """
         Run the Gillespie SSA to evolve the initial concentrations in time.
@@ -194,10 +194,18 @@ class Trajectory(object):
                         exception will be raised.
                         If set to None, this parameter will be ignored and the
                         number of steps will be limited only by time.
+            stop_time   Stop the trajectory at a given time instead of
+                        running for a specified duration. If this
+                        parameter is set to something other than None
+                        (the default), duration will be ignored and the
+                        trajectory will be run until this time is
+                        reached. Note that if stop_time < the traj.
+                        time, no dynamics will be run.
 
         """
 
-        stop_time = self.time + duration
+        if stop_time is None:
+            stop_time = self.time + duration
         if max_steps is not None:
             stop_steps = self.rxn_counter + max_steps
         resume = ((self.next_rxn is not None) and
