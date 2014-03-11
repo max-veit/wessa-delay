@@ -46,13 +46,22 @@
 \section{Introduction} % (fold)
 \label{sec:introduction}
 \begin{frame}
-	\frametitle{Biological Clocks}
-	\begin{itemize}
-            \item Periodic processes within cells
-            \item Understood to be biochemically driven
-            \item \textbf{TODO} Why are they important? What do we want to understand?
-            \item Synthetic versions have been studied
-	\end{itemize}
+    \frametitle{Biological Clocks}
+    \begin{columns}[t]
+        \begin{column}{0.5\textwidth}
+            \begin{itemize}
+                \item Periodic processes within cells
+                \item Essential feature of cellular function
+                \item Understood to be biochemically driven
+                \item Synthetic versions have been studied
+            \end{itemize}
+        \end{column}
+        \begin{column}[T]{0.5\textwidth}
+            \includegraphics[width=\textwidth]{h_ptc1Pathway.png}
+
+            \small (Source: \cite{biocarta})
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}
@@ -157,7 +166,7 @@
     \pause
 
     Derived from the premise:
-    \begin{assumption}
+    \begin{assumption}[\cite{gillespie-07}]
         The probability that a given reaction $R_j$ will occur somewhere in the system volume within the infinitesimal time interval $[t, t+\dee t]$ depends only on the current state $\vec{x}$:
         \[
             P_j(\vec{x}, [t, t+\dee t]) = a_j(\vec{x})\dee t
@@ -287,15 +296,10 @@
 \begin{frame}
     \frametitle{(Partial) Resolution}
     \begin{itemize}
+        \item Physical standpoint: trajectory vs. system
+        \item Trajectory remains in given state until next reaction
         \item Not \emph{inaccurate} resampling, just suboptimal\ldots
-        \item Physical standpoint
-        \item Trajectory vs. system
     \end{itemize}
-\end{frame}
-
-\begin{frame}
-    \frametitle{Numerical Evidence on Resampling}
-    (Plot of Gaussian production-degradation system)
 \end{frame}
 
 % section methodology (end)
@@ -318,6 +322,11 @@
             (Plot of DPD time evln)
         \end{column}
     \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Numerical Evidence on Resampling}
+    (Plot of Gaussian or delayed production-degradation system)
 \end{frame}
 
 %TODO More complex biological clocks: If plot available, show it.
@@ -355,6 +364,17 @@
     \end{beamercolorbox}
 \hfill\hfill
 
+\end{frame}
+
+\appendix
+
+\begin{frame}
+    \frametitle{References}
+    \begin{thebibliography}{9}
+        \bibitem{biocarta} ``Biocarta - Charting Pathways of Life.'' \url{http://www.biocarta.com/genes/index.asp}.
+        \bibitem{gillespie-07} D. Gillespie, Annu. Rev. Phys. Chem. \textbf{58}, 35-55 (2007).
+        
+    \end{thebibliography}
 \end{frame}
 
 \end{document}
