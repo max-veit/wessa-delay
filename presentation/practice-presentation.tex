@@ -27,8 +27,10 @@
 \newcommand{\figref}[1]{Figure~\ref{#1}}
 \newcommand{\secref}[1]{Section~\ref{#1}}
 
+\newtheorem{assumption}{Assumption}
+
 \begin{document}
-\title[Biochemical Networks]{Stochastic Simulation of Biochemical Networks with Delays}
+\title[Biochemical Networks]{Stochastic Simulation of Biological Clocks}
 \author[Max Veit]{Max Veit\\Advisor: Jorge Viñals}
 \date[2014-03-12]{12 March 2014}
 \institute[U of MN]{University of Minnesota}
@@ -49,6 +51,7 @@
             \item Periodic processes within cells
             \item Understood to be biochemically driven
             \item \textbf{TODO} Why are they important? What do we want to understand?
+            \item Synthetic versions have been studied
 	\end{itemize}
 \end{frame}
 
@@ -141,7 +144,6 @@
                 \item Concentrations oscillate about steady-state values
                 \item Concentrations are discrete (``populations'')
                 \item Noise is essential feature of some systems
-                \item Continuum approximation can even give unphysical results
             \end{itemize}
         \end{column}
     \end{columns}
@@ -150,37 +152,19 @@
 \begin{frame}
     \frametitle{Stochastic Chemical Kinetics}
     Different approach: Describe the evolution of a \emph{probability distribution}.
-    \pause
     
-    Time evolution described by the chemical master equation (CME):
-    \begin{overprint}
-    \onslide<2>
-        \begin{multline*}
-            \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
-            \sum_{j=1}^{M} \left( a_j(\vec{x} - \vec{s}_j) P(\vec{x} - \vec{s}_j, t | \vec{x}_0, t_0) - a_j(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
-        \end{multline*} 
-    \onslide<3>
-        \begin{multline*}
-            \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
-            \sum_{{\color{BrickRed} j}=1}^{ {\color{BrickRed} M} } \left( a_{\color{BrickRed} j}(\vec{x} - \vec{s}_{\color{BrickRed} j}) P(\vec{x} - \vec{s}_{\color{BrickRed} j}, t | \vec{x}_0, t_0) - a_{\color{BrickRed} j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
-        \end{multline*} 
+    Time evolution described by the chemical master equation (CME).
+    \pause
 
-        $\color{BrickRed} M$ reactions
-    \onslide<4>
-        \begin{multline*}
-            \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
-            \sum_{j=1}^{M} \left( {\color{NavyBlue} a_j}(\vec{x} - \vec{s}_j) P(\vec{x} - \vec{s}_j, t | \vec{x}_0, t_0) - {\color{NavyBlue}a_j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
-        \end{multline*} 
+    Derived from the premise:
+    \begin{assumption}
+        The probability that a given reaction $R_j$ will occur somewhere in the system volume within the infinitesimal time interval $[t, t+\dee t]$ depends only on the current state $\vec{x}$:
+        \[
+            P_j(\vec{x}, [t, t+\dee t]) = a_j(\vec{x})\dee t
+        \]
+    \end{assumption}
 
-        Each reaction has a \emph{propensity} $\color{NavyBlue} a$
-    \onslide<5>
-        \begin{multline*}
-            \frac{\partial}{\partial t} P(\vec{x}, t | \vec{x_0}, t_0) = \\
-            \sum_{j=1}^{M} \left( {\color{NavyBlue} a_j}(\vec{x} - {\color{ForestGreen} \vec{s}_j}) P(\vec{x} - {\color{ForestGreen} \vec{s}_j}, t | \vec{x}_0, t_0) - {\color{NavyBlue}a_j}(\vec{x}) P(\vec{x}, t | \vec{x}_0, t_0) \right)
-        \end{multline*} 
-
-        Each reaction has a \emph{propensity} $\color{NavyBlue} a$ and a \emph{state change vector} $\color{ForestGreen} \vec{s}$.
-    \end{overprint}
+    $a_j(\vec{x})$: ``Propensity''
 \end{frame}
 
 \begin{frame}
@@ -228,17 +212,17 @@
     Features:
     \begin{itemize}
         \item Monte Carlo approach
-        \item Generates a \emph{sample} (``trajectory'')\\
-            of the probability distribution
+        \item Generates trajectories that\\
+            \emph{sample} the probability distribution
         \item Simulates a sequence of reactions
         \begin{itemize}
+            \item Probability distributions\\
+                for next reaction known (propensities).
             \item Reaction type and time\\
-                randomly chosen using propensities
-            \item Wait time is exponentially distributed\\
-                (Markovian property)
+                randomly chosen.
         \end{itemize}
     \end{itemize}
-    Typically use an ensemble of trajectories.
+    Typically treat trajectories statistically.
 \end{frame}
 
 \begin{frame}
