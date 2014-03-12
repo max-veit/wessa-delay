@@ -1,5 +1,6 @@
 \documentclass[xcolor={usenames,dvipsnames,svgnames}]{beamer}
 \usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{2212}{-}
 \usepackage{graphicx}
 \usepackage{subfigure}
 \usepackage{hyperref}
@@ -347,7 +348,14 @@
 
 \begin{frame}
     \frametitle{Numerical Evidence on Resampling}
-    (Plot of Gaussian or delayed production-degradation system)
+    \begin{center}
+        \resizebox{0.48\textwidth}{!}{
+            \input{../results/gaussian-verification-sdm.pgf}
+        }
+        \resizebox{0.48\textwidth}{!}{
+            \input{../results/gaussian-verification-chi.pgf}
+        }
+    \end{center}
 \end{frame}
 
 %TODO More complex biological clocks: If plot available, show it.
