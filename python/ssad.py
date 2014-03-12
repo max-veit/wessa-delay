@@ -149,7 +149,7 @@ class Trajectory(object):
                         Defaults to 0.0 time units.
 
         """
-        self.state = np.asarray(state)
+        self.state = np.array(state)
         self.reactions = reactions
         self.init_time = init_time
         self.time = init_time
