@@ -256,33 +256,40 @@
 
 \begin{frame}
     \frametitle{Resampling Using a Weighted Ensemble}
-    Idea: Assign each trajectory in the ensembe a weight $w_j$.\\
+    Idea: Assign each trajectory in the ensemble a weight $w_j$.\\
     Divide the phase space into bins.
-    \begin{columns}[c]
+    \begin{columns}[t]
         \begin{column}{0.5\textwidth}
             \begin{enumerate}
-                \item Run trajectories for time $t_s$.
-                \item Pause trajectories.\\
+                \item<2-> Run trajectories for time $t_s$.
+                \item<2-> Pause trajectories.\\
                     In each bin:
-                \pause
                 \begin{itemize}
-                    \item If not enough trajectories,\\
+                    \item<3-> If not enough trajectories,\\
                         split some.
-                    \pause
-                    \item If too many,\\
+                    \item<4-> If too many,\\
                         combine some.
-                    \pause
-                    \item In any case,\\
+                    \item<5-> In any case,\\
                         \emph{conserve weight} in bin.
                 \end{itemize}
-                \pause
-                \item Repeat.
+                \item<6-> Repeat.
             \end{enumerate}
-            \pause
-            Statistical \emph{resampling} procedure.
         \end{column}
-        \begin{column}{0.5\textwidth}
-            (Sequence of images to illustrate weighted ensemble)
+        \begin{column}[T]{0.5\textwidth}
+            \begin{center}
+                \begin{overprint}
+                    \onslide<1|handout:0>
+                    \input{figures/wessa-seq00.pdf_tex}
+                    \onslide<2|handout:0>
+                    \input{figures/wessa-seq01.pdf_tex}
+                    \onslide<3|handout:0>
+                    \input{figures/wessa-seq02.pdf_tex}
+                    \onslide<4-5>
+                    \input{figures/wessa-seq03.pdf_tex}
+                    \onslide<6>
+                    \input{figures/wessa-seq04.pdf_tex}
+                \end{overprint}
+            \end{center}
         \end{column}
     \end{columns}
 \end{frame}
@@ -291,16 +298,20 @@
     \frametitle{Conceptual Issues}
     SSA does not use \emph{uniform} timesteps. How to pause?
 
-    (Figure illustrating non-uniform timesteps)
+    \begin{center}
+        \input{figures/wessa-timestep.pdf_tex}
+    \end{center}
 
     Not a problem \emph{if} system is Markovian.
 \end{frame}
 
 \begin{frame}
-    \frametitle{Delays Complicate Things Further}
-    (Figure illustrating delayed reactions)
-
     From where is delay measured?
+
+    \frametitle{Delays Complicate Things Further}
+    \begin{center}
+        \input{figures/wessa-timestep-delayed.pdf_tex}
+    \end{center}
 \end{frame}
 
 \begin{frame}
