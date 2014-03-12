@@ -10,3 +10,5 @@
 *.snm
 # And yes, the PDF can be regenerated, too.
 *.pdf
+# Except for the figures, which are saved as PDFs...
+!figures/*.pdf
