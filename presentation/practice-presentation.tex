@@ -152,7 +152,11 @@
     \hfill
     \begin{columns}[c]
         \begin{column}{0.5\textwidth}
-            (Plot of concentration oscillating about a mean)
+            \begin{center}
+                \resizebox{\textwidth}{!}{
+                    \input{figures/cont-stochastic.pgf}
+                }
+            \end{center}
         \end{column}
         \begin{column}{0.5\textwidth}
             \begin{itemize}
@@ -252,7 +256,9 @@
 
     Other regions get ignored.
 
-    (Figure: Sampling a bimodal distribution)
+    \begin{center}
+        \input{figures/bimodal.pdf_tex}
+    \end{center}
 \end{frame}
 
 \begin{frame}
@@ -341,21 +347,39 @@
             Common model system
         \end{column}
         \begin{column}{0.5\textwidth}
-            (Plot of DPD time evln)
+            \begin{center}
+                \resizebox{\textwidth}{!}{
+                    \input{figures/delayed-degradation.pgf}
+                }
+            \end{center}
         \end{column}
     \end{columns}
 \end{frame}
 
 \begin{frame}
     \frametitle{Numerical Evidence on Resampling}
-    \begin{center}
-        \resizebox{0.48\textwidth}{!}{
-            \input{../results/gaussian-verification-sdm.pgf}
-        }
-        \resizebox{0.48\textwidth}{!}{
-            \input{../results/gaussian-verification-chi.pgf}
-        }
-    \end{center}
+    \begin{overprint}
+        \onslide<1>
+        \begin{center}
+            \resizebox{0.48\textwidth}{!}{
+                \input{../results/delayed-deg-pdist.pgf}
+            }
+            \resizebox{0.48\textwidth}{!}{
+                \input{../results/delayed-deg-chi.pgf}
+            }
+        \end{center}
+        Delayed-degradation system
+        \onslide<2>
+        \begin{center}
+            \resizebox{0.48\textwidth}{!}{
+                \input{../results/gaussian-verification-sdm.pgf}
+            }
+            \resizebox{0.48\textwidth}{!}{
+                \input{../results/gaussian-verification-chi.pgf}
+            }
+        \end{center}
+        Simple production-degradation with analytical prob. dist.
+    \end{overprint}
 \end{frame}
 
 %TODO More complex biological clocks: If plot available, show it.
