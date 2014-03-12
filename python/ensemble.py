@@ -324,6 +324,10 @@ class Ensemble(object):
         for bin_no, trajs in self.bins.items():
             yield from trajs
 
+    def __len__(self):
+        """Return the number of trajectories in the ensemble."""
+        return sum(len(trajs) for trajs in self.bins.values())
+
     def _run_dynamics_all(self):
         """
         Advance all trajectories in time.
