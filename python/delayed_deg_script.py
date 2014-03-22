@@ -13,6 +13,9 @@ be overwritten if it exists.
 
 
 import sys
+import os
+
+import numpy as np
 
 import ssad
 import ensemble as we
@@ -31,45 +34,102 @@ ens_params = {
     'nbins': 20,
     'binrange': (-0.5, 59.5),
     'step_time': 2.0,
-    'run_time': 400.0,
+    'tot_time': 400.0,
+    'bin_pop_range': (4, 8)
+    'resample': True,
     }
 
-# Command-line options
-fname_default = 'delayed_deg_output.npz'
-if len(sys.argv) == 1:
-    out_fname = fname_default
-elif not sys.argv[1].startswith('-'):
-    out_fname = sys.argv[1]
-elif '-f' in sys.argv:
-    fl_idx = sys.argv.index('-f')
-    if len(sys.argv) < fl_idx + 2:
-        print(__doc__)
-        raise RuntimeError("Must specify the output filename with '-f'.")
+def parse_options(args):
+    """
+    Parse command-line options regarding file output.
+
+    Returns a tuple (fname, overwrite), where fname is the name of the
+    file to be written and overwrite is a boolean telling whether to
+    overwrite the file if it exists.
+
+    """
+    fname_default = 'delayed_deg_output.npy'
+    if len(args) == 1:
+        out_fname = fname_default
+    elif not args[1].startswith('-'):
+        out_fname = args[1]
+    elif '-f' in args:
+        fl_idx = args.index('-f')
+        if len(args) < fl_idx + 2:
+            print(__doc__)
+            raise RuntimeError("Must specify the output filename with '-f'.")
+        else:
+            out_fname = args[fl_idx + 1]
     else:
-        out_fname = sys.argv[fl_idx + 1]
-else:
-    out_fname = fname_default
-
-if '-o' in sys.argv:
-    overwrite = True
-else:
-    overwrite = False
+        out_fname = fname_default
+    if '-o' in args:
+        overwrite = True
+    else:
+        overwrite = False
+    return (out_fname, overwrite)
 
 
-# Reaction and ensemble setup
-rxns = [ssad.Reaction([0], [+1], rxn_params['k_plus']),
-        ssad.Reaction([1], [-1], rxn_params['k_minus']),
-        ssad.Reaction([1], [-1], rxn_params['k_delayed'],
-                      delay=rxn_params['tau_delay'])]
-init_trjs = []
-binrange = ens_params['binrange']
-bin_xs, bin_width = np.linspace(*binrange,
-                                num=ens_params[nbins],
-                                endpoint=False,
-                                retstep=True)
-paving = we.UniformPaving(*binrange, bin_counts=ens_params['nbins'])
-for idx in range(ens_params['nbins']):
-    init_state = random.randint(*binrange)
-    init_time = random.random_sample() * rxn_params['tau_delay']
-    init_trjs.append(we.WeightedTrajectory(
-        [init_state], rxns, 1.0 / ntrajs, init_time=init_time))
+def setup_reactions(rxn_params):
+    """Return the system of reactions to be simulated."""
+    rxns = [ssad.Reaction([0], [+1], rxn_params['k_plus']),
+            ssad.Reaction([1], [-1], rxn_params['k_minus']),
+            ssad.Reaction([1], [-1], rxn_params['k_delayed'],
+                          delay=rxn_params['tau_delay'])]
+    return rxns
+
+
+def run_ensemble(reactions, ens_params):
+
+    """
+    Set up and run the weighted ensemble for this system.
+
+    Parameters:
+        reactions   The list of reactions defining the system
+        ens_params  Dictionary of ensemble options
+
+    Returns an (M+1) x N array representing the probability distribution
+    at each resampling time, where M is the number of weighted-ensemble
+    steps and N is the number of bins. The first entry (result[0,:])
+    represents the distribution before any trajectories have been run.
+
+    """
+
+    init_trjs = []
+    binrange = ens_params['binrange']
+    bin_xs, bin_width = np.linspace(*binrange,
+                                    num=ens_params[nbins],
+                                    endpoint=False,
+                                    retstep=True)
+    paving = we.UniformPaving(*binrange, bin_counts=ens_params['nbins'])
+    for idx in range(ens_params['nbins']):
+        init_state = random.randint(*binrange)
+        init_time = random.random_sample() * rxn_params['tau_delay']
+        init_trjs.append(we.WeightedTrajectory(
+            [init_state], rxns, 1.0 / ntrajs, init_time=init_time))
+
+    niter = int(ens_params['tot_time'] / ens_params['step_time'])
+    prob_dist = np.empty((niter + 1, ens_params['nbins']))
+    ens = we.Ensemble(ens_params['step_time'],
+                      paving,
+                      ens_params['bin_pop_range'],
+                      init_trjs)
+    for stidx in range(niter):
+        prob_dist[stidx, :] = ens.get_pdist()
+        ens.run_step(resample=ens_params['resample'])
+    prob_dist[niter, :] = ens.get_pdist()
+    return prob_dist
+
+
+def write_result(result, fname, overwrite):
+    if not overwrite and os.path.isfile(fname):
+        raise RuntimeError("Error: File " + fname + "exists.\n" +
+                           "To overwrite, pass the '-o' option.")
+    else:
+        np.save(fname, result)
+
+
+if __name__ == "__main__":
+    fname, overwrite = parse_options(sys.argv)
+    rxns = setup_reactions(rxn_params)
+    result = run_ensemble(rxns, ens_params)
+    write_result(result, fname, overwrite)
