@@ -16,6 +16,7 @@ import sys
 import os
 
 import numpy as np
+from numpy import random
 
 import ssad
 import ensemble as we
@@ -35,7 +36,7 @@ ens_params = {
     'binrange': (-0.5, 59.5),
     'step_time': 2.0,
     'tot_time': 400.0,
-    'bin_pop_range': (4, 8)
+    'bin_pop_range': (4, 8),
     'resample': True,
     }
 
@@ -97,15 +98,16 @@ def run_ensemble(reactions, ens_params):
     init_trjs = []
     binrange = ens_params['binrange']
     bin_xs, bin_width = np.linspace(*binrange,
-                                    num=ens_params[nbins],
+                                    num=ens_params['nbins'],
                                     endpoint=False,
                                     retstep=True)
     paving = we.UniformPaving(*binrange, bin_counts=ens_params['nbins'])
-    for idx in range(ens_params['nbins']):
+    for idx in range(ens_params['ntrajs']):
         init_state = random.randint(*binrange)
         init_time = random.random_sample() * rxn_params['tau_delay']
         init_trjs.append(we.WeightedTrajectory(
-            [init_state], rxns, 1.0 / ntrajs, init_time=init_time))
+            [init_state], rxns, 1.0 / ens_params['ntrajs'],
+            init_time=init_time))
 
     niter = int(ens_params['tot_time'] / ens_params['step_time'])
     prob_dist = np.empty((niter + 1, ens_params['nbins']))
