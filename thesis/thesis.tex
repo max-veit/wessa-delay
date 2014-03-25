@@ -92,26 +92,31 @@
 \label{sec:introduction}
 
 %TODO Background references look a little thin - maybe add some more from browsing around?
-Recent research in biological physics \cite{ecoli-decision} indicates that the behavior and internal workings of a living cell is much more rich and complex than the bare instructions coded into its DNA would suggest. For example, an individual section of DNA can be turned off when a repressor protein binds to the beginning of that section. Such mechanisms provide cells a way to change the expression of their DNA, i.e. to control which proteins are produced from their genes and in what amounts, an ability known as (genetic) transcriptional regulation. This ability allows genetically identical cells to adapt their behavior to different environments or to differentiate into different types of cells as in the development of a multicellular organism. Developing models for the selective expression of genes is key to understanding how cells perform their daily functions and respond to their enviroments.
-
-Some strategies \textit{(which?)} for modeling transcriptional regulation model the cell as a simple, deterministic chemical reactor. 
+Recent research in biological physics~\cite{ecoli-decision} indicates that the behavior and internal workings of a living cell is much more rich and complex than the bare instructions coded into its DNA would suggest. For example, an individual section of DNA can be turned off when a repressor protein binds to the beginning of that section. Such mechanisms provide cells a way to change the expression of their DNA, i.e. to control which proteins are produced from their genes and in what amounts, an ability known as (genetic) transcriptional regulation. This ability allows genetically identical cells to adapt their behavior to different environments or to differentiate into different types of cells as in the development of a multicellular organism. Developing models for the selective expression of genes is key to understanding how cells perform their daily functions and respond to their enviroments.
 
 %TODO Ref on biological circuitry would be helpful
-Another interesting feature of transcriptional regulation is the presence of feedback. Real cells have many \textit{(how many?)} genes that can each individually be switched on or off. This allows genetic switches to interact in complex ways. An example would be two regions of DNA that each code for proteins that suppress the other region, although much more complex feedback mechanisms are found in real cells as well as synthesized in laboratories \textit{(examples?)}. Such mechanisms have the potential to be harnessed as a form of biological circuitry - computation done with chemical reactions instead of electricity. Basic components, such as oscillators, have already been synthesized. Biological circuitry promises to deliver a level of control over cells that would allow bacteria to be harnessed for producing chemicals or fulfilling other useful roles in the body. Advancement of this field, however, depends on a better understanding of genetic networks and the influence of stochasticity on their behavior.
+Another interesting feature of transcriptional regulation is the presence of feedback. Real cells have many \textit{(how many?)} genes that can each individually be switched on or off. This allows genetic switches to interact in complex ways, forming a genetic regulator network. An example would be two regions of DNA that each code for proteins that suppress the other region, although much more complex feedback mechanisms are found in real cells as well as synthesized in laboratories \textit{(examples?)}. Such mechanisms have the potential to be harnessed as a form of biological circuitry - computation done with chemical reactions instead of electricity~\cite{bio-circuits}. Basic components, such as oscillators, have already been synthesized~\cite{synth-osc}. Biological circuitry promises to deliver a level of control over cells that would allow bacteria to be harnessed for producing chemicals or fulfilling other useful roles in the body. Advancement of this field, however, depends on a better understanding of genetic networks and their behavior.
 
-% Theoretical modeling efforts, where they work well, where they fall short
+Many efforts have been made to theoretically model genetic regulatory networks \textit{(refs? examples?)}. Strategies for modeling such networks must also account for the stochasticity resulting from the presence of thermal fluctuations coupled with the small size of cells. Experiments~\cite{ecoli-decision} show that this stochasticity has a major influence on the function of these networks.
 
-% Understanding networks in terms of chemical reactions
+One method for modeling genetic regulatory networks is a technique known as system size expansion. This analytical technique captures some of the stochastic character of real genetic regulatory networks, but has some limitations. \textit{(which? where do results differ from real cells? Expand.)}
+
+The method explored in this work is to directly simulate the sequence of chemical reactions occurring in the cell using a Monte Carlo algorithm. The algorithm is known as the Gillespie stochastic simulation algorithm (SSA) and has seen use before in the context of genetic networks \textit{(refs?)}. The aim of this work is to extend the SSA to make it more practical for simulating real-world (natural or synthetic) genetic regulatory networks in order to analyze their behavior.
 
 % section Introduction (end)
 
 \section{Stochastic Chemical Kinetics} % (fold)
 \label{sec:chemkin}
 
+%     Reaction rate equations (not necessary...)
+%     Only really useful as contrast/strawman
+
 % Chemical kinetics and the Master equation
-%     Reaction rate equations
-% Markovian vs. non-Markovian dynamics
-% Crowded environments
+% Explicit form of the Master equation 
+
+% Motivation: Non-Markovian (i.e. delayed) dynamics
+
+
 % section chemkin (end)
 
 \section{Methodology} % (fold)
@@ -125,22 +130,28 @@ Another interesting feature of transcriptional regulation is the presence of fee
 \subsection{Extension to Non-Markovian Dynamics} % (fold)
 \label{sub:non-markovian}
 
+% Worth some discussion - Bratsun paper does it differently. Why do it my way?
+
 % subsection non-markovian (end)
 
-\subsection{Resampling the Concentration Space} % (fold)
+\subsection{Weighted-Ensemble Resampling} % (fold)
 \label{sub:we-resampling-intro}
 
 % subsection we-resampling-intro (end)
 
-\subsection{Modeling Diffusion and Crowded Environments} % (fold)
-\label{sub:diffusion-crowded}
+\subsection{Weighted Ensemble With Delays} % (fold)
+\label{sub:we-delays}
 
-% subsection diffusion-crowded (end)
+% subsection we-delays (end)
 
-\subsection{Verification and Validation} % (fold)
-\label{sub:verification-validation}
+\subsection{Verification Test Cases} % (fold)
+\label{sub:verification}
 
-% subsection verification-validation (end)
+% System for which analytical distribution is known
+
+% Simple production-degradation system
+
+% subsection verification (end)
 
 % section Methodology (end)
 
@@ -155,8 +166,16 @@ Another interesting feature of transcriptional regulation is the presence of fee
 % Some results available - talk about testing of WE, investigation of delayed-deg system
 % section resultsResults (end)
 
-\section{Conclusions} % (fold)
+\section{Conclusions and Future Work} % (fold)
 \label{sec:conclusions}
+
+% Future Work
+\subsection{Modeling Diffusion and Crowded Environments} % (fold)
+\label{sub:diffusion-crowded}
+
+% subsection diffusion-crowded (end)
+
+%     Crowded environments
 
 % section conclusions (end)
 
