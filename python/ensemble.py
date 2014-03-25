@@ -457,7 +457,6 @@ class UniformPaving(Paving):
             raise ValueError("Must specify at least one bin in each dimension")
         self.num_bins = np.prod(self.bin_counts)
 
-    # TODO Some bin edges are incorrectly placed by this algorithm. Fix.
     def get_bin_num(self, coords):
         """
         Return the bin number for a given point(s) in phase space.
@@ -482,10 +481,10 @@ class UniformPaving(Paving):
         of bin numbers, one for each point in phase space.
 
         """
-        coords_norm = ((np.asarray(coords) - self.low_bound) /
-                       (self.up_bound - self.low_bound))
+        coords_norm = ((np.asarray(coords) - self.low_bound) * self.bin_counts)
+        coords_norm = coords_norm // (self.up_bound - self.low_bound)
         int_coords = np.empty(coords_norm.shape, dtype='int64')
-        np.floor(coords_norm * self.bin_counts, int_coords)
+        np.floor(coords_norm, out=int_coords)
         return np.ravel_multi_index(int_coords.transpose(), self.bin_counts,
                                     mode='clip')
 
