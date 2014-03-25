@@ -6,8 +6,8 @@ This script sets up the delayed protein degradation (clock) system,
 runs it with the specified parameters, and writes the result to a file.
 
 The parameter 'out_fname' specifies the name of the file to which to
-write results (as a NumPy array). If '-o' is specified, the file will
-be overwritten if it exists.
+write results (as a NumPy zipped array collection). If '-o' is
+specified, the file will be overwritten if it exists.
 
 """
 
@@ -32,11 +32,11 @@ rxn_params = {
 
 ens_params = {
     'ntrajs': 40,
-    'nbins': 20,
+    'nbins': 10,
     'binrange': (-0.5, 59.5),
     'step_time': 2.0,
-    'tot_time': 400.0,
-    'bin_pop_range': (4, 8),
+    'tot_time': 100.0,
+    'bin_pop_range': (4, 4),
     'resample': True,
     }
 
@@ -88,10 +88,20 @@ def run_ensemble(reactions, ens_params):
         reactions   The list of reactions defining the system
         ens_params  Dictionary of ensemble options
 
-    Returns an (M+1) x N array representing the probability distribution
-    at each resampling time, where M is the number of weighted-ensemble
-    steps and N is the number of bins. The first entry (result[0,:])
-    represents the distribution before any trajectories have been run.
+    Returns a dict of arrays.
+    The element 'prob_dist' is an (M+1) x N array representing the
+    probability distribution at each resampling time, where M is the
+    number of weighted-ensemble steps and N is the number of bins. The
+    first entry (result[0,:]) represents the distribution before any
+    trajectories have been run.
+    The element 'bin_xs' is the array of x-positions at which the bins
+    start.
+    The element 'times' is the array of times at which the distribution
+    is sampled.
+
+    Note that due to the initial randomization of trajectory phases, the
+    distributions at times earlier than tau (the delay time) should not
+    be used.
 
     """
 
@@ -102,8 +112,10 @@ def run_ensemble(reactions, ens_params):
                                     endpoint=False,
                                     retstep=True)
     paving = we.UniformPaving(*binrange, bin_counts=ens_params['nbins'])
+
     for idx in range(ens_params['ntrajs']):
         init_state = random.randint(*binrange)
+        # Choose a random time between 0 and tau to randomize the phases
         init_time = random.random_sample() * rxn_params['tau_delay']
         init_trjs.append(we.WeightedTrajectory(
             [init_state], rxns, 1.0 / ens_params['ntrajs'],
@@ -111,15 +123,20 @@ def run_ensemble(reactions, ens_params):
 
     niter = int(ens_params['tot_time'] / ens_params['step_time'])
     prob_dist = np.empty((niter + 1, ens_params['nbins']))
+    pdist_times = np.linspace(0, ens_params['tot_time'], niter + 1)
     ens = we.Ensemble(ens_params['step_time'],
                       paving,
                       ens_params['bin_pop_range'],
                       init_trjs)
+
     for stidx in range(niter):
         prob_dist[stidx, :] = ens.get_pdist()
         ens.run_step(resample=ens_params['resample'])
     prob_dist[niter, :] = ens.get_pdist()
-    return prob_dist
+    result = {'prob_dist': prob_dist,
+              'bin_xs': bin_xs,
+              'times': pdist_times}
+    return result
 
 
 def write_result(result, fname, overwrite):
@@ -127,7 +144,7 @@ def write_result(result, fname, overwrite):
         raise RuntimeError("Error: File " + fname + "exists.\n" +
                            "To overwrite, pass the '-o' option.")
     else:
-        np.save(fname, result)
+        np.savez(fname, **result)
 
 
 if __name__ == "__main__":
