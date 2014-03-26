@@ -75,6 +75,8 @@
 \DeclareMathOperator{\Prob}{P}
 % Physics Domain-Specific
 \newcommand{\kB}{\ensuremath{k_\mathrm{B}}}
+% Document-specific
+\newcommand{\delaytime}{\ensuremath{\tau}}
 
 % Headers and Footers
 \usepackage{fancyhdr}
@@ -133,14 +135,18 @@ Using the above assumption, it is possible to derive a differential equation tha
 \end{equation}
 The sum runs over all the reaction pathways in the chemical system. The vector $\vec{s}_j$, known as the state-change vector of reaction $j$, indicates the effect of the reaction $j$ on the state of the chemical system: reaction $j$ takes the state instantaneously from $\vec{x}$ to $\vec{x} + \vec{s}_j$.
 
-The above definition of propensity and the resulting Master equation rely on several simplifying assumptions about the system. \todo{more on well-stirred, ideal gas or dilute solution, maybe instantaneous reactions...} \todo{need reference that details assumptions, if Gillespie 2007 doesn't mention it} While these assumptions begin to break down in living cells (see Section~\ref{sub:diffusion-crowded}), the utility and ease of implementation of algorithms to solve the chemical master equation have led to wide use of this theory in modeling the biochemistry of cells. \todo{refs - maybe a review article?}
+The above definition of propensity and the resulting Master equation rely on several simplifying assumptions about the system. The most severe of these is that the chemical system is assumed to be a homogeneous (well-stirred) ideal gas or dilute solution. \todo{may need reference that details assumptions, since Gillespie (2007) doesn't mention the ideal-gas part} While these assumptions begin to break down in living cells (see Section~\ref{sub:diffusion-crowded}), the utility and ease of implementation of algorithms to solve the chemical master equation have led to wide use of this theory in modeling the biochemistry of cells. \todo{refs - maybe a review article?}
 
 \subsection{Delayed Reactions} % (fold)
 \label{sub:delayed-reactions}
 
-\todo{Motivation}
+In order to reduce the computational cost and model complexity of applying the SSA to biological systems, an additional abstraction is adopted. Processes common in cell biology, such as DNA replication, protein production, and protein digestion, actually consist of sequences of thousands \todo{right number?} of individual chemical reactions like the binding of individual nucleotides to a developing RNA strand. It would be tedious and expensive to simulate each individual step of the process. More importantly, it would be extremely wasteful to do so if one is only interested in the outcome of the entire process. \todo{and the high-level dynamics of proteins - better wording}
 
-\todo{Loss of Markovian property}
+One can avoid simulating each step of a complex biological process by modeling the entire process as a single reaction. For example, a protein-production reaction (which itself consists of many complex multi-step processes such as RNA transcription and protein folding) can be abstracted as a single reaction that produces a protein from nothing. However, this reaction cannot be said to occur instantaneously (as with simple chemical reactions), as the entire process it represents takes a certain time to complete. For example, the process of protein production \todo{gene expression?} takes about 5--10 minutes to complete in a typical cell. \todo{ref; what is a typical cell?}
+
+To account for this time, one can associate a \defkeywd{delay} with the reaction to represent the time the underlying process needs to complete. In effect, the propensity function for the delayed reaction depends not on the current state, but on the history of the chemical system. More precisely, if reaction $j$ is delayed with a time $\delaytime_j$, its propensity function is written $a_j \left(\vec{x}(t - \delaytime_j) \right)$. For simplicity, $\delaytime_j$ is assumed to be a number. In general, however, the delay may be better characterized by a probability distribution.
+
+Finally, introducing delayed reactions has an important consequence: Since delayed reactions depend on the history of chemical system, models incorporating them are non-Markovian. \todo{mention consequences later on?}
 
 % subsection delayed-reactions (end)
 
