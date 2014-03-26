@@ -4,5 +4,6 @@
 *.out
 *.bbl
 *.blg
+*.toc
 # And yes, the PDF can be regenerated, too.
 *.pdf
