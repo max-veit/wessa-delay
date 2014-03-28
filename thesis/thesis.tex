@@ -146,7 +146,16 @@ One can avoid simulating each step of a complex biological process by modeling t
 
 To account for this time, one can associate a \defkeywd{delay} with the reaction to represent the time the underlying process needs to complete. In effect, the propensity function for the delayed reaction depends not on the current state, but on the history of the chemical system. More precisely, if reaction $j$ is delayed with a time $\delaytime_j$, its propensity function is written $a_j \left(\vec{x}(t - \delaytime_j) \right)$. For simplicity, $\delaytime_j$ is assumed to be a number. In general, however, the delay may be better characterized by a probability distribution.
 
-Finally, introducing delayed reactions has an important consequence: Since delayed reactions depend on the history of chemical system, models incorporating them are non-Markovian. \todo{mention consequences later on?}
+Accounting for the presence of delays, Equation~\eqref{eq:master-eqn} can be written as: \todo{check for correctness}
+\begin{multline}
+    \frac{\partial}{\partial t} \Prob(\vec{x}, t | \vec{x}_0, t_0) = \\
+    \sum_j \left( a_j (\vec{x}(t - \delaytime_j) - \vec{s}_j) \Prob(\vec{x}(t - \delaytime_j) - \vec{s}_j, t | \vec{x}_0, t_0) - \right.\\
+    \left. a_j(\vec{x}(t - \delaytime_j)) \Prob(\vec{x}(t - \delaytime_j), t | \vec{x}_0, t_0) \right)
+    \label{eq:master-eqn-delay}
+\end{multline}
+in the case where each delay $\tau_j$, which may be zero, is a single number.
+
+Finally, introducing delayed reactions has an important consequence: Since delayed reactions depend on the history of the chemical system, models incorporating them are non-Markovian. \todo{mention consequences later on?}
 
 % subsection delayed-reactions (end)
 
@@ -185,6 +194,10 @@ The iteration is continued typically until the time $t$ reaches (exceeds) a pred
 
 \subsection{Extension to Non-Markovian Dynamics} % (fold)
 \label{sub:non-markovian}
+
+The classic SSA was designed only for explicitly Markovian chemical systems. However, one could imagine extending the algorithm to include delayed reactions. One such extension is proposed by \cite{delay-oscillations}. The modified algorithm, upon selecting a delayed reaction in Step~2 (see Section~\ref{sub:gillespie-ssa}), schedules the reaction to fire at a later time (that is, Step~3 is postponed by a time $\tau_k$).
+
+In this work, a method that more closely follows the analytical modeling of delayed reactions via Equation~\eqref{eq:master-eqn-delay} is chosen.
 
 % Worth some discussion - Bratsun paper does it differently. Why do it my way?
 
