@@ -134,7 +134,7 @@ In theories, such as reaction-rate equations (RRE), where the continuum limit is
 %TODO Bit of a weak intro for stochastic chemkin - see if there's a more interesting way to bring it in
 The theory of stochastic chemical kinetics explicitly treats the discreteness and stochasticity present in small systems. It avoids solving for a \emph{deterministic} trajectory describing how the reactants evolve in time, as the RRE method does. Instead, it attempts to find the \emph{probability} that the chemical system will be be in a given state at a given time. It does this by employing the fundamental assumption that the probability that a given reaction $R_j$ will occur within the system volume in the next infinitesimal time interval of length $\dee t$ depends only on the current state $\vec{x}$. This probability is written as $a_j(\vec{x}) \dee t$, where the function $a_j(\vec{x})$ is known as the \defkeywd{propensity function} \cite{gillespie-ssa}. In other words, the fundamental assumption of chemical kinetics is that the chemical system can be represented as a (continuous-time) Markov chain.
 
-Using the above assumption, it is possible to derive a differential equation that describes the time evolution of the probability distribution of the system. This probability distribution is written $\Prob(\vec{x}, t | \vec{x}_0, t_0)$, which means ``the probability, given that the system started in the state $\vec{x}_0$ at time $t_0$, that the system will be in the state $\vec{x}$ at some later time $t$.'' The equation is called the chemical master equation, and in the form given in \cite{gillespie-ssa}, it reads:
+Using the above assumption, it is possible to derive a differential equation that describes the time evolution of the probability distribution of the system. This probability distribution is written $\Prob(\vec{x}, t | \vec{x}_0, t_0)$, which means ``the probability, given that the system started in the state $\vec{x}_0$ at time $t_0$, that the system will be in the state $\vec{x}$ at some later time $t$.'' The equation is called the chemical master equation, and in the form given in \cite{gillespie-ssa}, it reads \todo{reformulate}:
 \begin{equation}
     \frac{\partial}{\partial t} \Prob(\vec{x}, t | \vec{x}_0, t_0) = \sum_j \left( a_j (\vec{x} - \vec{s}_j) \Prob(\vec{x} - \vec{s}_j, t | \vec{x}_0, t_0) - a_j(\vec{x}) \Prob(\vec{x}, t | \vec{x}_0, t_0) \right)
     \label{eq:master-eqn}
@@ -165,7 +165,7 @@ One can avoid simulating each step of a complex biological process by modeling t
 
 To account for this duration, one can associate a \defkeywd{delay} with the reaction to represent the time the underlying process needs to complete. In effect, the propensity function for the delayed reaction depends not on the current state, but on the history of the chemical system. More precisely, if reaction $j$ is delayed with a time $\delaytime_j$, its propensity function is written $a_j \left(\vec{x}(t - \delaytime_j) \right)$. For simplicity, $\delaytime_j$ is assumed to be a number. In general, however, the delay may be better characterized by a probability distribution.
 
-Accounting for the presence of delays, Equation~\eqref{eq:master-eqn} can be written: \todo{check for correctness}
+Accounting for the presence of delays, Equation~\eqref{eq:master-eqn} can be written: \todo{reformulate}
 \begin{multline}
     \frac{\partial}{\partial t} \Prob(\vec{x}, t | \vec{x}_0, t_0) = \\
     \sum_j \left( a_j (\vec{x}(t - \delaytime_j) - \vec{s}_j) \Prob(\vec{x}(t - \delaytime_j) - \vec{s}_j, t | \vec{x}_0, t_0) - \right.\\
@@ -240,32 +240,110 @@ The weighted-ensemble method has been applied to stochastic chemical kinetics be
     \item Perform a resampling step to equalize the distribution of trajectories over state space.
     \item Run all the trajectories independently for a time $\tau_p$.
 \end{enumerate}
+In this case, running a trajectory means applying the SSA to evolve the trajectory forward in time. However, the generality of the weighted-ensemble method permits the use of other time evolution algorithms for the second step. In the perhaps more commonly encountered applications of the weighted-ensemble method, a molecular dynamics algorithm is used to evolve independent trajectories through phase space.
 
-The method implements the resampling step by partitioning the state space into discrete \defkeywd{bins}. The goal of the resampling step is to equalize the number of trajectories in each bin so that the trajectories are distributed more uniformly over state space. The equalization is done using two basic operations: To increase the number of trajectories in a bin, a trajectory $T_a$ can be replicated (or ``split'') to obtain $M$ copies. Each of the copies receives a weight $w_a/M$; in this way, the total weight within a bin is conserved. To decrease the number of trajectories, a trajectory $T_b$ can be deleted (or ``killed'') and its weight assigned to another trajectory $T_c$ in the same bin, i.e. $T_c$ receives a new weight $w_b + w_c$. Again, the total weight within each bin is conserved.
+The resampling step is implemented by partitioning the state space into discrete \defkeywd{bins}. To equalize the distribution of trajectories over state space, two basic operations can be used: To increase the number of trajectories in a bin, a trajectory $T_a$ can be replicated (or ``split'') to obtain $M$ copies. Each of the copies receives a weight $w_a/M$; in this way, the total weight within a bin is conserved. To decrease the number of trajectories, a trajectory $T_b$ can be deleted (or ``killed'') and its weight assigned to another trajectory $T_c$ in the same bin, i.e. $T_c$ receives a new weight $w_b + w_c$. Again, the total weight within each bin is conserved. This conservation of weight is the key feature that ensures the statistical correctness of the resampling method.
 
-
-
-As the bins are statically defined, the estimate of the probability distribution is taken to be a histogram over the bins. Many different binning strategies are possible (see \cite{we-exact} for examples), but a simple uniform 
-
-\todo{Explain how resampling is done, make analogies to Monte Carlo variance reduction}
-
-\todo{WE with SSA, conceptual issues. Resolution with Markovian property.}
+In this work, I adopt a binning strategy that spaces bin boundaries uniformly over some range $[x_{i,\text{min}}, x_{i,\text{max}}]$ for each coordinate $x_i$; coordinates outside this range are grouped into the closest in-bounds bin. These bins are statically defined, so the estimate of the probability distribution is taken to be a histogram over the bins. This is by no means the only strategy possible; \cite{we-exact} gives more examples of binning strategies to show how general the weighted-ensemble method is.
 
 % subsection we-resampling-intro (end)
+
+\subsection{Weighted-Ensemble SSA} % (fold)
+\label{sub:wessa}
+
+Some important conceptual issues arise when applying the weighted-ensemble method to chemical-kinetics trajectories evolved using the SSA. The weighted-ensemble method is only guaranteed to be statistically exact if the resampling step occurs at the same time for all the trajectories in the ensemble. However, the SSA chooses non-uniform timesteps, so it would seem impossible to ``pause'' all the trajectories at the same time $t_\text{sync}$. 
+
+Figure~\ref{fig:wessa-pause} illustrates the problem. The SSA only generates a discrete set of steps $(\vec{x}_n, t_n)$. Thus, the closest one can to come to pausing a trajectory at $t_\text{sync}$ is to stop each trajectory once it chooses a reaction time that is after $t_\text{sync}$, but before the trajectory actually updates its state. However, this procedure results in an ensemble of trajectories each at different times, which means that it is technically invalid to apply resampling to this ensemble.
+
+\begin{figure}[ht]
+    \centering
+    \def\svgwidth{0.65\textwidth}
+    \input{figures/wessa-timestep.pdf_tex}
+    \caption{The SSA takes non-uniform timesteps, so it is not possible to pause each trajectory exactly at time $t_\text{sync}$. Instead, one must pause it at the last reaction before $t_\text{sync}$, resulting in an ensemble of trajectories each at different times.}
+    \label{fig:wessa-pause}
+\end{figure}
+
+In the case of purely Markovian (non-delayed) dynamics, it is in fact perfectly valid to apply weighted-ensemble resampling to the set of paused trajectories described above. The reason is that the future probability distribution for a Markovian trajectory depends, by definition, only on its current state. This means the distribution of waiting times until the next reaction on a trajectory is the memoryless exponential distribution. If a trajectory determines its next reaction to occur after the time $t_\text{sync}$, it is thus possible to update the trajectory's time to $t_\text{sync}$ and sample the next reaction from there without biasing the overall measured probability distribution. \todo{More specific; airtight argument perhaps in appendix}
+
+Therefore, it is valid to pause a Markovian trajectory at an arbitrary time $t_\text{sync}$. This is statistically equivalent to leaving the trajectory at the state of its last reaction before $t_\text{sync}$. One can thus run weighted-ensemble resampling on trajectories paused this way without biasing the estimate of the underlying probability distribution.
+
+% subsection wessa (end)
 
 \subsection{Weighted Ensemble With Delays} % (fold)
 \label{sub:we-delays}
 
-\todo{Invalidity of resolution w/ Markovian property.}
+In systems with non-Markovian dynamics, i.e. delayed reactions, a different resolution is necessary in order to be able to apply the weighted-ensemble method. Since the propensities for delayed reactions depend on a trajectory's history, they can change in between reactions and the distribution of waiting times is no longer memoryless.
+
+Again, the fundamental question is whether it is valid to interpret the discrete sequence $(\vec{x}_n, t_n)$ generated by the SSA as a continuous-time trajectory. This question is not easy to address on a rigorous, mathematical level. Instead, I present numerical evidence from some common model systems indicating that weighted-ensemble resampling does not bias the estimate of the probability distribution.
+
+\todo{Address systems with widely separated timescales}
 
 % subsection we-delays (end)
 
 \subsection{Verification Test Cases} % (fold)
 \label{sub:verification}
 
-% System for which analytical distribution is known
+The first model system on which I tested weighted-ensemble resampling is a simple production-degradation system for which the analytical probability distribution is known. The system consists of two reactions for which the equations are:
+\begin{align}
+    \begin{gathered}
+        \varnothing \xrightarrow{A} X \\
+        X \xrightarrow {B} \varnothing
+    \end{gathered}
+    \label{eq:prod-deg-rxn}
+\end{align}
+The parameters $A$ and $B$ are the propensity constants for each reaction.
 
-% Simple production-degradation system
+The steady-state probability distribution is a Gaussian with both a mean and a standard deviation equal to $\frac{A}{B}$ (using a system volume $\Omega = 1$), or explicitly:
+\begin{equation}
+    \Prob(x) = \sqrt{\frac{B}{2\pi A}}\exp\left( -\frac{B}{2 A} \left( x - \frac{A}{B} \right)^2  \right)
+    \label{eq:prod-deg-dist}
+\end{equation}
+
+The system was simulated first by running many trajectories independently, without reweighting, and computing a histogram of all trajectories at a fixed time (chosen so that the distribution had reached a steady state). In addition, a weighted ensemble was run using the same bins as were used to construct the first histogram. Both distributions were compared to the analytical distribution given by Equation~\eqref{eq:prod-deg-dist}; the results are shown in Figure~\ref{fig:gaussian-verification}. The error bars on the weighted-ensemble histogram were estimated by running many independent ensembles. \todo{Remake figures and fill in parameters/numbers}
+
+\begin{figure}[ht]
+    \begin{center}
+        \begin{subfigure}{0.49\textwidth}
+            \resizebox{\textwidth}{!}{
+                \input{../results/gaussian-verification-sdm.pgf}
+            }
+            \caption{}
+            \label{sfg:gaussvf-comparison}
+        \end{subfigure}
+        \begin{subfigure}{0.49\textwidth}
+            \resizebox{\textwidth}{!}{
+                \input{../results/gaussian-verification-chi.pgf}
+            }
+            \caption{}
+            \label{sfg:gaussvf-chi}
+        \end{subfigure}
+    \end{center}
+    \caption{\ref{sfg:gaussvf-comparison} Comparison of the weighted-ensemble method with a straight non-reweighted ensemble on the simple production-degradation system. \ref{sfg:gaussvf-chi} Differences from the analytical distribution, normalized by each histogram's standard deviation.}
+    \label{fig:gaussian-verification}
+\end{figure}
+
+In order to test the resampling on systems with delays, the simple delayed system described in \ref{sec:delayed-deg} was chosen. The same procedure as above was repeated on this system; the results are shown in Figure~\ref{fig:dd-verification}. \todo{Remake figures and fill in parameters/numbers}
+
+\begin{figure}[ht]
+    \begin{center}
+        \begin{subfigure}{0.49\textwidth}
+            \resizebox{\textwidth}{!}{
+                \input{../results/delayed-deg-pdist.pgf}
+            }
+            \caption{}
+            \label{sfg:ddvf-comparison}
+        \end{subfigure}
+        \begin{subfigure}{0.49\textwidth}
+            \resizebox{\textwidth}{!}{
+                \input{../results/delayed-deg-chi.pgf}
+            }
+            \caption{}
+            \label{sfg:ddvf-chi}
+        \end{subfigure}
+    \end{center}
+    \caption{\ref{sfg:ddvf-comparison} Comparison of the weighted-ensemble method with a straight non-reweighted ensemble on the delayed-degradation system from Section~\ref{sec:delayed-deg}. \ref{sfg:ddvf-chi} Difference between the reweighted and non-reweighted distribution, normalized by the standard deviation $\sigma = \sqrt{\sigma_\text{rw}^2 + \sigma_\text{no-rw}^2}$.}
+    \label{fig:dd-verification}
+\end{figure}
 
 % subsection verification (end)
 
@@ -274,10 +352,25 @@ As the bins are statically defined, the estimate of the probability distribution
 \section{Delayed-Degradation Model System} % (fold)
 \label{sec:delayed-deg}
 
+One of the simplest possible systems with delayed reactions is the delayed-degradation model, defined by the reactions:
+\begin{align}
+    \begin{gathered}
+        \varnothing \xrightarrow{A} X \\
+        X \xrightarrow {B} \varnothing \\
+        X \xRightarrow[(\tau)]{C} \varnothing
+    \end{gathered}
+    \label{eq:delayed-deg-rxns}
+\end{align}
+This is simply the production-degradation system with an additional reaction added; the notation for the third reaction means it is a delayed reaction with delay $\tau$ and propensity constant $C$.
+
+The simplicity of this system of reactions makes it a good candidate for analytical study; one such analysis can be found in \cite{delay-oscillations}. Here I test some of the assumptions made in that analysis using numerical calculations.
+
 % section delayed-deg (end)
 
 \section{Simple Feedback System} % (fold)
 \label{sec:experimental-system}
+
+\textit{Still waiting on data about this system}
 
 % section experimental-system (end)
 
