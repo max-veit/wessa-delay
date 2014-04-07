@@ -1,0 +1,4 @@
+# Make sure the PDF figures do get included here
+
+!*.pdf
+
