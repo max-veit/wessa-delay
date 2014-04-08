@@ -1,3 +1,6 @@
 # Specific (I)Python annoyances
 .ipynb_checkpoints
 __pycache__
+
+# Data to be saved should be stored in the results folder
+*.npz
