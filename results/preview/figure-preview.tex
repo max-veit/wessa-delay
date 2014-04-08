@@ -89,9 +89,16 @@ This is some example text to see how figures look in context.
 
 \begin{figure}[ht]
     \centering
-    \resizebox{\textwidth}{!}{ \input{../gaussian-verification.pgf} }
-    \caption{A comparison of stochastic algorithms on a test system, the non-delayed production-degradation equilibrium (${k_+=25\unit{sec}}^{-1}$, ${k_- = 1\unit{sec}^{-1}}$). The simulations were each run for 100 seconds on 50 equally-spaced bins (each bar corresponds to a bin); statistics were taken in each bin over the last 50 seconds of the simulation.}
+    \input{../gaussian-verification-sdm.pgf} 
+    \caption{A comparison of stochastic algorithms on a test system, the non-delayed production-degradation equilibrium (${k_+=25\unit{sec}}^{-1}$, ${k_- = 1\unit{sec}^{-1}}$). The simulations were each run for 400 seconds on 50 equally-spaced bins (each bar corresponds to a bin).}
     \label{fig:gaussian-verification}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \input{../prod_deg_chi.pgf} 
+    \caption{Same comparison as above, now with differences normalized by the standard deviation $\sigma = \sqrt{\sigma_1^2 + \sigma_2^2}$}.
+    \label{fig:prod-deg-chi}
 \end{figure}
 
 \begin{equation}
