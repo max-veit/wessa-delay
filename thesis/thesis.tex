@@ -306,26 +306,21 @@ The steady-state probability distribution is a Gaussian with both a mean and a s
     \label{eq:prod-deg-dist}
 \end{equation}
 
-The system was simulated first by running many trajectories independently, without reweighting, and computing a histogram of all trajectories at a fixed time (chosen so that the distribution had reached a steady state). In addition, a weighted ensemble was run using the same bins as were used to construct the first histogram. Both distributions were compared to the analytical distribution given by Equation~\eqref{eq:prod-deg-dist}; the results are shown in Figure~\ref{fig:gaussian-verification}. The error bars on the weighted-ensemble histogram were estimated by running many independent ensembles. \todo{Remake figures and fill in parameters/numbers}
+The system was simulated first by running many trajectories independently, without reweighting, and computing a histogram of all trajectories at a fixed time (chosen so that the distribution had reached a steady state). In addition, a weighted ensemble was run using the same bins as were used to construct the first histogram. Both distributions were compared to the analytical distribution given by Equation~\eqref{eq:prod-deg-dist}; the results are shown in Figure~\ref{fig:gaussian-verification}. The error bars on the weighted-ensemble histogram were estimated by running many independent ensembles. \todo{fill in parameters/numbers}
 
-\begin{figure}[ht]
+\begin{figure}[hp]
     \begin{center}
-        \begin{subfigure}{0.49\textwidth}
-            \resizebox{\textwidth}{!}{
+        \begin{subfigure}{\textwidth}
                 \input{../results/gaussian-verification-sdm.pgf}
-            }
-            \caption{}
             \label{sfg:gaussvf-comparison}
         \end{subfigure}
-        \begin{subfigure}{0.49\textwidth}
-            \resizebox{\textwidth}{!}{
-                \input{../results/gaussian-verification-chi.pgf}
-            }
-            \caption{}
+
+        \begin{subfigure}{\textwidth}
+            \input{../results/prod_deg_chi.pgf}
             \label{sfg:gaussvf-chi}
         \end{subfigure}
     \end{center}
-    \caption{\ref{sfg:gaussvf-comparison} Comparison of the weighted-ensemble method with a straight non-reweighted ensemble on the simple production-degradation system. \ref{sfg:gaussvf-chi} Differences from the analytical distribution, normalized by each histogram's standard deviation.}
+    \caption{Top: comparison of the weighted-ensemble method with a straight non-reweighted ensemble on the simple production-degradation system. Bottom: differences from the analytical distribution, normalized by each histogram's standard deviation.}
     \label{fig:gaussian-verification}
 \end{figure}
 
