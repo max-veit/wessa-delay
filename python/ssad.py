@@ -161,6 +161,7 @@ class Trajectory(object):
         self.last_rxn_time = init_time
         self.rxn_tallies = defaultdict(lambda: 0)
         self.reject_tallies = defaultdict(lambda: 0)
+        self.max_delay = max(rxn.delay for rxn in self.reactions)
 
     def run_dynamics(self, duration, max_steps=None, stop_time=None):
 
@@ -378,6 +379,14 @@ class Trajectory(object):
                     break
             states[:,tidx] = prev_state
         return states
+
+    def prune_history(self):
+        """Save memory by discarding unnecessary history."""
+        last_time = self.last_rxn_time - self.max_delay
+        prune_idx = bisect.bisect_right(self.hist_times, last_time)
+        if prune_idx > 0:
+            self.hist_times = self.hist_times[prune_idx - 1:]
+            self.hist_states = self.hist_states[prune_idx - 1:]
 
     def clone(self, num_clones):
         """

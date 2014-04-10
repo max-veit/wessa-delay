@@ -219,7 +219,7 @@ class Ensemble(object):
         self.bin_pop_range = bin_pop_range
         self.clone_num = 1
 
-    def run_step(self, resample=True):
+    def run_step(self, resample=True, prune=True):
         """
         Run one step of the Weighted Ensemble algorithm.
 
@@ -230,15 +230,19 @@ class Ensemble(object):
         Optional Parameters:
             resample    Whether to run the resampling procedure at the
                         beginning of the step. Default True.
+            prune       Whether to prune trajectory histories to save
+                        memory. Default True.
 
         """
+        if prune:
+            self._prune_all()
         if resample:
             self._resample()
         self._run_dynamics_all()
         self._recompute_bins()
         #self._record_state()
 
-    def run_time(self, duration, resample):
+    def run_time(self, duration, resample=True, prune=True):
         """
         Run this trajectory until a specified time is reached.
 
@@ -253,6 +257,8 @@ class Ensemble(object):
         Optional Parameters:
             resample    Whether to run the resampling procedure at the
                         beginning of each step. Default True.
+            prune       Whether to prune trajectory histories to save
+                        memory. Default True.
 
         Returns:
             The ensemble time at the end of the last step.
@@ -260,7 +266,7 @@ class Ensemble(object):
         """
         stop_time = self.time + duration
         while self.time < stop_time:
-            self.run_step(resample)
+            self.run_step(resample, prune)
         return self.time
 
     def get_pdist(self, paving=None):
@@ -340,6 +346,10 @@ class Ensemble(object):
         for traj in self:
             traj.run_dynamics(duration=None, stop_time=stop_time)
         self.time = stop_time
+
+    def _prune_all(self):
+        for traj in self:
+            traj.prune_history()
 
     def _resample(self):
         """Resample the phase space by modifying the bin populations."""
