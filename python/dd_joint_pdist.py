@@ -12,8 +12,6 @@ specified, the file will be overwritten if it exists.
 
 """
 
-# TODO Modify - this was copied from an earlier DD script!
-
 import sys
 import os
 
@@ -22,25 +20,30 @@ from numpy import random
 
 import ssad
 import ensemble as we
+import util
 
 
 # Adjustable parameters
 rxn_params = {
     'k_plus': 100,
     'k_minus': 3,
-    'k_delayed': 5,
+    'k_delayed': 3,
     'tau_delay': 20,
     }
 
-ens_params = {
-    'ntrajs': 40,
-    'nbins': 10,
-    'binrange': (-0.5, 59.5),
-    'step_time': 2.0,
-    'tot_time': 100.0,
-    'bin_pop_range': (4, 4),
-    'resample': True,
+sweep_params = {
+    'C_min': 3.0,
+    'C_max': 5.0,
+    'npoints': 10,
     }
+
+pdist_params = {
+    'nbins': 10,
+    'binrange': (0, 60),
+    'init_state': 0,
+    'run_time': 120,
+    }
+
 
 def parse_options(args):
     """
@@ -71,7 +74,6 @@ def parse_options(args):
         overwrite = False
     return (out_fname, overwrite)
 
-
 def setup_reactions(rxn_params):
     """Return the system of reactions to be simulated."""
     rxns = [ssad.Reaction([0], [+1], rxn_params['k_plus']),
@@ -80,66 +82,34 @@ def setup_reactions(rxn_params):
                           delay=rxn_params['tau_delay'])]
     return rxns
 
+def jdist_sweep(rxn_params, sweep_params, pdist_params):
+    """
+    Compute the delayed joint probability over a range of parameters.
 
-def run_ensemble(reactions, ens_params):
+    Uses the same binning for non-delayed and delayed values.
+
+    Returns a dict of arrays; 'C_vals' is the list of delayed-reaction
+    propensity constants that were used. The 3-D array 'j_pdists'
+    contains all the calculated distributions, with C-values along the
+    first axis, non-delayed bins along the second, and delayed bins
+    along the third.
 
     """
-    Set up and run the weighted ensemble for this system.
-
-    Parameters:
-        reactions   The list of reactions defining the system
-        ens_params  Dictionary of ensemble options
-
-    Returns a dict of arrays.
-    The element 'prob_dist' is an (M+1) x N array representing the
-    probability distribution at each resampling time, where M is the
-    number of weighted-ensemble steps and N is the number of bins. The
-    first entry (result[0,:]) represents the distribution before any
-    trajectories have been run.
-    The element 'bin_xs' is the array of x-positions at which the bins
-    start.
-    The element 'times' is the array of times at which the distribution
-    is sampled.
-
-    Note that due to the initial randomization of trajectory phases, the
-    distributions at times earlier than tau (the delay time) should not
-    be used.
-
-    """
-
-    init_trjs = []
-    binrange = ens_params['binrange']
-    bin_xs, bin_width = np.linspace(*binrange,
-                                    num=ens_params['nbins'],
-                                    endpoint=False,
-                                    retstep=True)
-    paving = we.UniformPaving(*binrange, bin_counts=ens_params['nbins'])
-
-    for idx in range(ens_params['ntrajs']):
-        init_state = random.randint(*binrange)
-        # Choose a random time between 0 and tau to randomize the phases
-        init_time = random.random_sample() * rxn_params['tau_delay']
-        init_trjs.append(we.WeightedTrajectory(
-            [init_state], rxns, 1.0 / ens_params['ntrajs'],
-            init_time=init_time))
-
-    niter = int(ens_params['tot_time'] / ens_params['step_time'])
-    prob_dist = np.empty((niter + 1, ens_params['nbins']))
-    pdist_times = np.linspace(0, ens_params['tot_time'], niter + 1)
-    ens = we.Ensemble(ens_params['step_time'],
-                      paving,
-                      ens_params['bin_pop_range'],
-                      init_trjs)
-
-    for stidx in range(niter):
-        prob_dist[stidx, :] = ens.get_pdist()
-        ens.run_step(resample=ens_params['resample'])
-    prob_dist[niter, :] = ens.get_pdist()
-    result = {'prob_dist': prob_dist,
-              'bin_xs': bin_xs,
-              'times': pdist_times}
-    return result
-
+    C_range = np.linspace(sweep_params['C_min'],
+                          sweep_params['C_max'],
+                          sweep_params['nbins'])
+    rxns_sweep = dict(rxn_params)
+    nbins = pdist_params['nbins']
+    paving = we.UniformPaving(*pdist_params['binrange'], nbins)
+    pdists = np.empty((sweep_params['npoints'], nbins, nbins))
+    for swidx, C_val in enumerate(C_range):
+        rxns_sweep['k_delayed'] = C_val
+        rxns = setup_reactions(rxns_sweep)
+        trj = ssad.Trajectory(pdist_params['init_state'], rxns)
+        trj.run_dynamics(pdist_params['run_time'])
+        pdists[swidx,...] = util.dd_joint_pdist(
+                trj, rxn_params['tau_delay'], paving, paving)
+    return {'C_vals': C_range, 'j_pdists': pdists}
 
 def write_result(result, fname, overwrite):
     if not overwrite and os.path.isfile(fname):
@@ -151,6 +121,5 @@ def write_result(result, fname, overwrite):
 
 if __name__ == "__main__":
     fname, overwrite = parse_options(sys.argv)
-    rxns = setup_reactions(rxn_params)
-    result = run_ensemble(rxns, ens_params)
+    result = jdist_sweep(rxn_params, sweep_params, pdist_params)
     write_result(result, fname, overwrite)
