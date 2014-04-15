@@ -32,15 +32,15 @@ rxn_params = {
     }
 
 sweep_params = {
-    'C_min': 3.0,
+    'C_min': 1.0,
     'C_max': 5.0,
-    'npoints': 10,
+    'npoints': 9,
     }
 
 pdist_params = {
-    'nbins': 10,
+    'nbins': 60,
     'binrange': (0, 60),
-    'init_state': 0,
+    'init_state': [0],
     'run_time': 120,
     }
 
@@ -49,12 +49,10 @@ def parse_options(args):
     """
     Parse command-line options regarding file output.
 
-    Returns a tuple (fname, overwrite), where fname is the name of the
-    file to be written and overwrite is a boolean telling whether to
-    overwrite the file if it exists.
+    Returns the name of the file to be written.
 
     """
-    fname_default = 'delayed_deg_output.npy'
+    fname_default = 'dd_joint_output.npz'
     if len(args) == 1:
         out_fname = fname_default
     elif not args[1].startswith('-'):
@@ -72,7 +70,11 @@ def parse_options(args):
         overwrite = True
     else:
         overwrite = False
-    return (out_fname, overwrite)
+    if not overwrite and os.path.isfile(out_fname):
+        raise RuntimeError("File " + out_fname + " exists.\n" +
+                           "To overwrite, pass the '-o' option.")
+    else:
+        return out_fname
 
 def setup_reactions(rxn_params):
     """Return the system of reactions to be simulated."""
@@ -97,29 +99,21 @@ def jdist_sweep(rxn_params, sweep_params, pdist_params):
     """
     C_range = np.linspace(sweep_params['C_min'],
                           sweep_params['C_max'],
-                          sweep_params['nbins'])
+                          sweep_params['npoints'])
     rxns_sweep = dict(rxn_params)
     nbins = pdist_params['nbins']
-    paving = we.UniformPaving(*pdist_params['binrange'], nbins)
+    paving = we.UniformPaving(*pdist_params['binrange'], bin_counts=nbins)
     pdists = np.empty((sweep_params['npoints'], nbins, nbins))
     for swidx, C_val in enumerate(C_range):
         rxns_sweep['k_delayed'] = C_val
         rxns = setup_reactions(rxns_sweep)
         trj = ssad.Trajectory(pdist_params['init_state'], rxns)
         trj.run_dynamics(pdist_params['run_time'])
-        pdists[swidx,...] = util.dd_joint_pdist(
+        pdists[swidx,...] = util.delay_joint_pdist(
                 trj, rxn_params['tau_delay'], paving, paving)
     return {'C_vals': C_range, 'j_pdists': pdists}
 
-def write_result(result, fname, overwrite):
-    if not overwrite and os.path.isfile(fname):
-        raise RuntimeError("Error: File " + fname + "exists.\n" +
-                           "To overwrite, pass the '-o' option.")
-    else:
-        np.savez(fname, **result)
-
-
 if __name__ == "__main__":
-    fname, overwrite = parse_options(sys.argv)
+    fname = parse_options(sys.argv)
     result = jdist_sweep(rxn_params, sweep_params, pdist_params)
-    write_result(result, fname, overwrite)
+    np.savez(fname, **result)
