@@ -15,4 +15,5 @@
         "resample": true,
         "num_ens": 100
     }
+    "comment": "Takes about 20 minutes on one desktop core."
 }

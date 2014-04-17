@@ -1,0 +1,18 @@
+{
+    "rxn_params": {
+        "k_plus": 100.0,
+        "k_minus": 3.0,
+        "k_delayed": 1.0,
+        "tau_delay": 20.0
+    },
+    "ens_params": {
+        "ntrajs": 40,
+        "nbins": 30,
+        "binrange": [0.0, 60.0],
+        "step_time": 2.0,
+        "tot_time": 60.0,
+        "bin_pop_range": [4, 4],
+        "resample": false,
+        "num_ens": 100
+    }
+}
