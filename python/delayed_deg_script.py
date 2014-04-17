@@ -24,30 +24,9 @@ import ssad
 import ensemble as we
 
 
-# Adjustable parameters
-rxn_params = {
-    'k_plus': 100,
-    'k_minus': 3,
-    'k_delayed': 1,
-    'tau_delay': 20,
-    }
-
-ens_params = {
-    'ntrajs': 40,
-    'nbins': 30,
-    'binrange': (0, 60),
-    'step_time': 2.0,
-    'tot_time': 60.0,
-    'bin_pop_range': (4, 4),
-    'resample': False,
-    'num_ens': 100,
-    }
-# Note: With current parameters, 20 minutes on one core.
-
-
 def parse_options(args):
     """
-    Parse command-line options regarding file output.
+    Parse command-line options regarding file input and output.
 
     Returns method parameters as a (possibly nested) dictionary.  The
     element 'out_fname' contains the name of the file to which to write

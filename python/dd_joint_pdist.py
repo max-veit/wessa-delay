@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 """
-Usage: dd_joint_pdist.py [out_fname] [-f out_fname] [-o]
+Usage: dd_joint_pdist.py param_fname [-o out_fname] [-c]
 
 This script sets up the delayed protein degradation (clock) system,
 runs it with the specified parameters, and computes the delayed joint
 probability distribution.
 
-The parameter 'out_fname' specifies the name of the file to which to
-write results (as a NumPy zipped array collection). If '-o' is
-specified, the file will be overwritten if it exists.
+The parameter 'param_fname' specifies the filename from which to read
+the reaction and parameters, 'out_fname' specifies the name of the file
+to which to write results (as a NumPy zipped array collection). If '-c'
+is specified, the file will be overwritten (clobbered) if it exists.
 
 """
 
 import sys
 import os
+import json
 
 import numpy as np
 from numpy import random
@@ -23,58 +25,50 @@ import ensemble as we
 import util
 
 
-# Adjustable parameters
-rxn_params = {
-    'k_plus': 100,
-    'k_minus': 3,
-    'k_delayed': 3,
-    'tau_delay': 20,
-    }
-
-sweep_params = {
-    'C_min': 1.0,
-    'C_max': 5.0,
-    'npoints': 9,
-    }
-
-pdist_params = {
-    'nbins': 60,
-    'binrange': (0, 60),
-    'init_state': [0],
-    'run_time': 120,
-    }
-
-
 def parse_options(args):
     """
-    Parse command-line options regarding file output.
+    Parse command-line options regarding file input and output.
 
-    Returns the name of the file to be written.
+    Returns method parameters as a (possibly nested) dictionary.  The
+    element 'out_fname' contains the name of the file to which to write
+    output. The filename specified on the command line overrides any
+    specified in the parameter file.
 
     """
-    fname_default = 'dd_joint_output.npz'
-    if len(args) == 1:
-        out_fname = fname_default
-    elif not args[1].startswith('-'):
-        out_fname = args[1]
-    elif '-f' in args:
-        fl_idx = args.index('-f')
+    output_dir_default = 'output'
+    out_fname_default = 'dd_joint_output.npz'
+    params = dict()
+    if len(args) == 1 or args[1].startswith('-'):
+        raise RuntimeError("Must specify a filename for parameters.")
+    else:
+        param_fname = args[1]
+    with open(param_fname) as param_file:
+        params = json.load(param_file)
+    if '-o' in args:
+        fl_idx = args.index('-o')
         if len(args) < fl_idx + 2:
             print(__doc__)
-            raise RuntimeError("Must specify the output filename with '-f'.")
+            raise RuntimeError("Must specify the output filename with '-o'.")
         else:
-            out_fname = args[fl_idx + 1]
-    else:
-        out_fname = fname_default
-    if '-o' in args:
+            params['out_fname'] = args[fl_idx + 1]
+    elif 'out_fname' not in params:
+        # Construct a default filename
+        if os.path.isdir(output_dir_default):
+            out_basename = os.path.basename(param_fname)
+            out_base = os.path.splitext(out_basename)[0] + ".npz"
+            out_fname = os.path.join(output_dir_default, out_base)
+        else:
+            out_fname = out_fname_default
+        params['out_fname'] = out_fname
+    if '-c' in args:
         overwrite = True
     else:
         overwrite = False
     if not overwrite and os.path.isfile(out_fname):
         raise RuntimeError("File " + out_fname + " exists.\n" +
-                           "To overwrite, pass the '-o' option.")
+                           "To overwrite, pass the '-c' option.")
     else:
-        return out_fname
+        return params
 
 def setup_reactions(rxn_params):
     """Return the system of reactions to be simulated."""
@@ -114,6 +108,7 @@ def jdist_sweep(rxn_params, sweep_params, pdist_params):
     return {'C_vals': C_range, 'j_pdists': pdists}
 
 if __name__ == "__main__":
-    fname = parse_options(sys.argv)
-    result = jdist_sweep(rxn_params, sweep_params, pdist_params)
-    np.savez(fname, **result)
+    params = parse_options(sys.argv)
+    result = jdist_sweep(params['rxn_params'], params['sweep_params'],
+                         params['pdist_params'])
+    np.savez(params['out_fname'], **result)
