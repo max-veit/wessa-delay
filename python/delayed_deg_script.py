@@ -37,7 +37,7 @@ ens_params = {
     'step_time': 2.0,
     'tot_time': 60.0,
     'bin_pop_range': (4, 4),
-    'resample': True,
+    'resample': False,
     'num_ens': 100,
     }
 # Note: With current parameters, 20 minutes on one core.
