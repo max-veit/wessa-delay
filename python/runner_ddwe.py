@@ -77,7 +77,7 @@ def setup_reactions(rxn_params):
                           delay=rxn_params['tau_delay'])]
     return rxns
 
-def run_ensembles(rxns, ens_params):
+def run_ensembles(rxns, ens_params, rxn_params):
 
     """
     Run several weighted ensembles for this system and gather statistics.
@@ -133,5 +133,5 @@ def run_ensembles(rxns, ens_params):
 if __name__ == "__main__":
     params = parse_options(sys.argv)
     rxns = setup_reactions(params['rxn_params'])
-    result = run_ensembles(rxns, params['ens_params'])
+    result = run_ensembles(rxns, params['ens_params'], params['rxn_params'])
     np.savez(params['out_fname'], rxn_params=params['rxn_params'], **result)

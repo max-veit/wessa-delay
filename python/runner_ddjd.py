@@ -102,9 +102,27 @@ def jdist_sweep(rxn_params, sweep_params, pdist_params):
         rxns_sweep['k_delayed'] = C_val
         rxns = setup_reactions(rxns_sweep)
         trj = ssad.Trajectory(pdist_params['init_state'], rxns)
-        trj.run_dynamics(pdist_params['run_time'])
-        pdists[swidx,...] = util.delay_joint_pdist(
-                trj, rxn_params['tau_delay'], paving, paving)
+        prune_itval = pdist_params.get('prune_itval', None)
+        # Run the trajectory, pruning history if necessary
+        if prune_itval is not None:
+            stop_time = pdist_params['run_time']
+            last_read_time = rxn_params['tau_delay']
+            pdists[swidx,...] = 0.0
+            while trj.time < stop_time:
+                trj.run_dynamics(duration=prune_itval)
+                pdists[swidx,...] += util.delay_joint_pdist(
+                        trj, rxn_params['tau_delay'], paving, paving,
+                        from_time=last_read_time)
+                last_read_time = trj.time
+                trj.prune_history()
+            trj.run_dynamics(duration=None, stop_time=stop_time)
+            pdists[swidx,...] += util.delay_joint_pdist(
+                    trj, rxn_params['tau_delay'], paving, paving,
+                    from_time=last_read_time)
+        else:
+            trj.run_dynamics(pdist_params['run_time'])
+            pdists[swidx,...] = util.delay_joint_pdist(
+                    trj, rxn_params['tau_delay'], paving, paving)
     return {'C_vals': C_range, 'j_pdists': pdists}
 
 if __name__ == "__main__":
