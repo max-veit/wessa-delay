@@ -12,7 +12,7 @@
     },
     "pdist_params": {
         "nbins": 60,
-        "binrange": [0.0, 60.0],
+        "binrange": [0.0, 6000.0],
         "init_state": [0],
         "run_time": 220.0,
         "prune_itval": 50.0

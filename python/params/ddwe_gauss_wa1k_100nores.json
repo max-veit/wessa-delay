@@ -8,7 +8,7 @@
     "ens_params": {
         "ntrajs": 40,
         "nbins": 30,
-        "binrange": [0.0, 60.0],
+        "binrange": [0.0, 600.0],
         "step_time": 2.0,
         "tot_time": 60.0,
         "bin_pop_range": [4, 4],
