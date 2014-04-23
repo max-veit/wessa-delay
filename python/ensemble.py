@@ -242,7 +242,7 @@ class Ensemble(object):
         self._recompute_bins()
         #self._record_state()
 
-    def run_time(self, duration, resample=True, prune=True):
+    def run_time(self, duration, resample=True, prune=True, prune_itval=None):
         """
         Run this trajectory until a specified time is reached.
 
@@ -259,14 +259,22 @@ class Ensemble(object):
                         beginning of each step. Default True.
             prune       Whether to prune trajectory histories to save
                         memory. Default True.
+            prune_itval Time interval at which to prune trajectories. If
+                        None (the default), pruning will be done at
+                        every step. Has no effect if prune==False.
 
         Returns:
             The ensemble time at the end of the last step.
 
         """
         stop_time = self.time + duration
+        last_prune_time = self.time
         while self.time < stop_time:
-            self.run_step(resample, prune)
+            if self.time >= last_prune_time + prune_itval and prune:
+                self.run_step(resample, prune=True)
+                last_prune_time = self.time
+            else:
+                self.run_step(resample, prune=False)
         return self.time
 
     def get_pdist(self, paving=None):

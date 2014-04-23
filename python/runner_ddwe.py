@@ -16,6 +16,7 @@ is specified, the file will be overwritten (clobbered) if it exists.
 import sys
 import os
 import json
+import time
 
 import numpy as np
 from numpy import random
@@ -102,6 +103,7 @@ def run_ensembles(rxns, ens_params, rxn_params):
                                     endpoint=False,
                                     retstep=True)
     paving = we.UniformPaving(*binrange, bin_counts=ens_params['nbins'])
+    prune_itval = ens_params.get('prune_itval')
 
     prob_dists = np.zeros((ens_params['num_ens'], ens_params['nbins']))
     tot_times = np.empty((ens_params['num_ens']))
@@ -118,7 +120,8 @@ def run_ensembles(rxns, ens_params, rxn_params):
                           paving,
                           ens_params['bin_pop_range'],
                           init_trjs)
-        tot_time = ens.run_time(ens_params['tot_time'])
+        tot_time = ens.run_time(ens_params['tot_time'],
+                                prune_itval=prune_itval)
         tot_times[ens_idx] = tot_time
         pdist = ens.get_pdist()
         prob_dists[ens_idx, ...] = pdist
@@ -133,5 +136,8 @@ def run_ensembles(rxns, ens_params, rxn_params):
 if __name__ == "__main__":
     params = parse_options(sys.argv)
     rxns = setup_reactions(params['rxn_params'])
+    start_time = time.process_time()
     result = run_ensembles(rxns, params['ens_params'], params['rxn_params'])
+    run_time = time.process_time() - start_time
     np.savez(params['out_fname'], rxn_params=params['rxn_params'], **result)
+    print("Run time: {} seconds.".format(run_time))
