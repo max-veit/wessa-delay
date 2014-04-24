@@ -307,6 +307,32 @@ class Ensemble(object):
             weights[bin_id] = sum(trj.weight for trj in trjs)
         return weights
 
+    def get_bin_counts(self, paving=None):
+        """
+        Return the number of samples in each bin.
+
+        This is not the sum of weights within each bin, but rather the
+        integer number of weighted trajectories occupying that bin.
+
+        Parameters:
+            paving      The paving defining the regions over which to
+                        count the trajectories.If None (the default),
+                        the ensemble's internal paving is used.
+
+        Returns:
+            One-dimensional array, indexed by bin, giving the number of
+            trajectories in each bin.
+
+        """
+        if paving is not None:
+            raise NotImplementedError("No support for arbitrary pavings at " +
+                    "this time.")
+        self._recompute_bins()
+        counts = np.empty((self.paving.num_bins))
+        for bin_id, trjs in self.bins.items():
+            counts[bin_id] = len(trjs)
+        return counts
+
     def _recompute_bins(self):
         """
         Recompute bin numbers for all trajectories.

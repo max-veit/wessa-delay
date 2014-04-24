@@ -106,6 +106,7 @@ def run_ensembles(rxns, ens_params, rxn_params):
     prune_itval = ens_params.get('prune_itval')
 
     prob_dists = np.zeros((ens_params['num_ens'], ens_params['nbins']))
+    bin_counts = np.empty((ens_params['num_ens'], ens_params['nbins']))
     tot_times = np.empty((ens_params['num_ens']))
     for ens_idx in range(ens_params['num_ens']):
         # Create seed trajectories with random initial conditions and phases
@@ -125,9 +126,11 @@ def run_ensembles(rxns, ens_params, rxn_params):
         tot_times[ens_idx] = tot_time
         pdist = ens.get_pdist()
         prob_dists[ens_idx, ...] = pdist
+        bin_counts[ens_idx, ...] = ens.get_bin_counts()
 
     result = {'bin_xs': bin_xs,
               'prob_dists': prob_dists,
+              'bin_counts': bin_counts,
               'tot_times': tot_times,
               }
     return result
