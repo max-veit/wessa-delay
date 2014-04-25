@@ -270,7 +270,9 @@ class Ensemble(object):
         stop_time = self.time + duration
         last_prune_time = self.time
         while self.time < stop_time:
-            if self.time >= last_prune_time + prune_itval and prune:
+            do_prune = prune and ((prune_itval is None) or
+                                  (self.time >= last_prune_time + prune_itval))
+            if do_prune:
                 self.run_step(resample, prune=True)
                 last_prune_time = self.time
             else:
@@ -328,7 +330,7 @@ class Ensemble(object):
             raise NotImplementedError("No support for arbitrary pavings at " +
                     "this time.")
         self._recompute_bins()
-        counts = np.empty((self.paving.num_bins))
+        counts = np.zeros((self.paving.num_bins))
         for bin_id, trjs in self.bins.items():
             counts[bin_id] = len(trjs)
         return counts
