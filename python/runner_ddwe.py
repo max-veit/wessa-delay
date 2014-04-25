@@ -50,7 +50,7 @@ def parse_options(args):
             print(__doc__)
             raise RuntimeError("Must specify the output filename with '-o'.")
         else:
-            params['out_fname'] = args[fl_idx + 1]
+            out_fname = args[fl_idx + 1]
     elif 'out_fname' not in params:
         # Construct a default filename
         if os.path.isdir(output_dir_default):
@@ -59,7 +59,7 @@ def parse_options(args):
             out_fname = os.path.join(output_dir_default, out_base)
         else:
             out_fname = out_fname_default
-        params['out_fname'] = out_fname
+    params['out_fname'] = out_fname
     if '-c' in args:
         overwrite = True
     else:
