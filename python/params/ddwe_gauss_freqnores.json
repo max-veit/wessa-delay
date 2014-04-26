@@ -13,7 +13,7 @@
         "tot_time": 60.0,
         "prune_itval": 20.0,
         "bin_pop_range": [10, 10],
-        "resample": true,
+        "resample": false,
         "num_ens": 40
     },
     "runtime_minutes": 108
