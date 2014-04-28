@@ -9,12 +9,12 @@
         "ntrajs": 100,
         "nbins": 30,
         "binrange": [0.0, 240.0],
-        "step_time": 0.02,
+        "step_time": 0.01,
         "tot_time": 60.0,
         "prune_itval": 20.0,
         "bin_pop_range": [10, 10],
         "resample": true,
         "num_ens": 40
     },
-    "runtime_minutes": 215
+    "runtime_minutes": 712
 }

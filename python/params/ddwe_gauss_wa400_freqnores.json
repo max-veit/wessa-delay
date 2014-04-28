@@ -16,5 +16,5 @@
         "resample": false,
         "num_ens": 40
     },
-    "runtime_minutes": 108
+    "runtime_minutes": 320
 }
