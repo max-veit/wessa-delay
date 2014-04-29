@@ -1,0 +1,20 @@
+{
+    "rxn_params": {
+        "k_plus": 400.0,
+        "k_minus": 4.5,
+        "k_delayed": 0.0,
+        "tau_delay": 1.0
+    },
+    "sweep_params": {
+        "C_min": 4.0,
+        "C_max": 6.0,
+        "npoints": 11
+    },
+    "pdist_params": {
+        "nbins": 60,
+        "binrange": [0.0, 240.0],
+        "init_state": [0],
+        "run_time": 801.0,
+        "prune_itval": 5.0
+    }
+}

@@ -108,7 +108,7 @@ def jdist_sweep(rxn_params, sweep_params, pdist_params):
             stop_time = pdist_params['run_time']
             last_read_time = rxn_params['tau_delay']
             pdists[swidx,...] = 0.0
-            while trj.time < stop_time:
+            while trj.time < stop_time - prune_itval:
                 trj.run_dynamics(duration=prune_itval)
                 pdists[swidx,...] += util.delay_joint_pdist(
                         trj, rxn_params['tau_delay'], paving, paving,
