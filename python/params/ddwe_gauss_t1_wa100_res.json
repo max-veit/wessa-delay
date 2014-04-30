@@ -34,5 +34,5 @@
         "resample": true,
         "num_ens": 40
     },
-    "runtime_minutes": NaN
+    "runtime_minutes": 10.1
 }
