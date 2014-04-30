@@ -44,6 +44,7 @@ def parse_options(args):
         param_fname = args[1]
     with open(param_fname) as param_file:
         params = json.load(param_file)
+    params['param_fname'] = param_fname
     if '-o' in args:
         fl_idx = args.index('-o')
         if len(args) < fl_idx + 2:
@@ -129,4 +130,4 @@ if __name__ == "__main__":
     params = parse_options(sys.argv)
     result = jdist_sweep(params['rxn_params'], params['sweep_params'],
                          params['pdist_params'])
-    np.savez(params['out_fname'], **result)
+    np.savez(params['out_fname'], param_fname=params['param_fname'], **result)
