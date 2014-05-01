@@ -1,5 +1,5 @@
 {
-    "description": "Delayed-degradation system with A=100, tau=1.0, resampling",
+    "description": "Delayed-degradation system with A=100, tau=1.0, infrequent resampling",
     "species": ["X"],
     "rxn_list": [
         {
@@ -27,12 +27,12 @@
         "nbins": 30,
         "binrange": [0.0, 60.0],
         "phase_rand_time": 1.0,
-        "step_time": 0.01,
+        "step_time": 1.0,
         "tot_time": 3.0,
         "prune_itval": 5.0,
         "bin_pop_range": [10, 10],
         "resample": true,
         "num_ens": 40
     },
-    "runtime_minutes": 11.6
+    "runtime_minutes": 5.9
 }

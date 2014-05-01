@@ -1,12 +1,12 @@
 {
-    "description": "Delayed-degradation system with A=100, tau=1.0, resampling",
+    "description": "Delayed-degradation system with A=800, tau=1.0, resampling",
     "species": ["X"],
     "rxn_list": [
         {
             "name": "Production (A)",
             "reactants": {"X": 0},
             "state_vec": {"X": 1},
-            "propensity_const": 100.0
+            "propensity_const": 800.0
         },
         {
             "name": "Instantaneous Degradation (B)",
@@ -25,7 +25,7 @@
     "ens_params": {
         "ntrajs": 300,
         "nbins": 30,
-        "binrange": [0.0, 60.0],
+        "binrange": [125.0, 275.0],
         "phase_rand_time": 1.0,
         "step_time": 0.01,
         "tot_time": 3.0,
@@ -34,5 +34,5 @@
         "resample": true,
         "num_ens": 40
     },
-    "runtime_minutes": 11.6
+    "runtime_minutes": 57.3
 }
