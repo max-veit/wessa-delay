@@ -121,17 +121,16 @@ class WeightedTrajectory(Trajectory):
             if np.isscalar(weights):
                 new_weight = weights
             else:
-                new_clone.weight = weights[cidx]
+                new_weight = weights[cidx]
             if cidx == 0:
                 self.weight = new_weight
                 continue
             new_clone = WeightedTrajectory(self.state,
                                            self.reactions,
                                            new_weight,
-                                           init_time=self.time)
+                                           init_time=self.init_time)
             # A deep copy is probably not necessary here, as the past
             # history should not be modified.
-            # TODO Consider selective omission of history
             new_clone.hist_times = copy(self.hist_times)
             new_clone.hist_states = copy(self.hist_states)
             new_clone.next_rxn = self.next_rxn

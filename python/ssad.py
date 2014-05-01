@@ -278,7 +278,7 @@ class Trajectory(object):
                 state = self.state
             else:
                 state = self.sample_state(
-                    self.time - rxn.delay, use_init_state = True)
+                    self.time - rxn.delay, use_init_state=True)
             propensities[ridx] = rxn.calc_propensity(state)
         prop_csum = np.cumsum(propensities)
         total_prop = prop_csum[-1]
@@ -412,7 +412,7 @@ class Trajectory(object):
             if cidx == 0:
                 continue
             new_clone = Trajectory(self.state, self.reactions,
-                                   init_time=self.time)
+                                   init_time=self.init_time)
             # A deep copy is probably not necessary here, as the past
             # history should not be modified.
             # TODO Consider selective omission of history
