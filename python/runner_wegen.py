@@ -175,4 +175,4 @@ if __name__ == "__main__":
     result = run_ensembles(rxns, params['ens_params'])
     run_time = time.process_time() - start_time
     np.savez(params['out_fname'], param_fname=params['param_fname'], **result)
-    print("Run time: {} seconds.".format(run_time))
+    print("\nRun time: {:.3g} minutes.".format(run_time / 60.0))

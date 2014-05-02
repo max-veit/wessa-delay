@@ -16,6 +16,7 @@ is specified, the file will be overwritten (clobbered) if it exists.
 import sys
 import os
 import json
+import time
 
 import numpy as np
 from numpy import random
@@ -128,6 +129,9 @@ def jdist_sweep(rxn_params, sweep_params, pdist_params):
 
 if __name__ == "__main__":
     params = parse_options(sys.argv)
+    start_time = time.process_time()
     result = jdist_sweep(params['rxn_params'], params['sweep_params'],
                          params['pdist_params'])
+    run_time = time.process_time() - start_time
     np.savez(params['out_fname'], param_fname=params['param_fname'], **result)
+    print("\nRun time: {:.3g} minutes.".format(run_time / 60.0))
