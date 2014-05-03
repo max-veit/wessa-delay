@@ -305,6 +305,35 @@ class Trajectory(object):
         self.next_rxn = rxn
         self.next_rxn_time = time
 
+    def get_hist_index(self, time, use_init_state=False):
+        """
+        Return the index of the last reaction before the given time.
+
+        The index returned refers to this object's hist_times and
+        hist_states attributes. The time pointed to by this index is
+        equal to max(hist_times[hist_times <= time]).
+
+        Parameters:
+            time    Time to use to index the history
+
+        Optional Parameters:
+            use_init_state  Whether to return the starting index if the
+                            given time is earlier than this trajectory's
+                            starting time. Default False, in which case
+                            that condition raises a ValueError.
+
+        """
+        if (time > self.time) or (time < self.init_time and
+                                  not use_init_state):
+            raise ValueError("Out-of-bounds time " + str(time) + " received.")
+        if (time < self.init_time) and use_init_state:
+            return 0
+        idx = bisect.bisect_right(self.hist_times, time)
+        if idx > 0:
+            return idx - 1
+        else:
+            raise ValueError("Time {} not found in history.".format(time))
+
     def sample_state(self, time, use_init_state=False):
         """
         Return a single sample of this trajectory's state at a given time.
@@ -335,6 +364,8 @@ class Trajectory(object):
         idx = bisect.bisect_right(self.hist_times, time)
         if idx > 0:
             return (self.hist_states)[idx - 1]
+        else:
+            raise ValueError("Time {} not found in history.".format(time))
 
     # TODO Implement use_init_state capability (like in sample_state)
     def sample_state_seq(self, times):
