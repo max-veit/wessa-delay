@@ -1,4 +1,5 @@
 {
+    "description": "Delayed-joint distribution, tau = 20.0, A = 100, C = 1...5",
     "rxn_params": {
         "k_plus": 100.0,
         "k_minus": 3.0,
@@ -16,5 +17,6 @@
         "init_state": [0],
         "run_time": 820.0,
         "prune_itval": 50.0
-    }
+    },
+    "runtime_minutes": 8.7
 }
