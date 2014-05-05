@@ -1,5 +1,5 @@
 {
-    "description": "Delayed-joint distribution, tau = 1.0, A = 100, C = 4...6",
+    "description": "Delayed-joint distribution, tau = 1.0, A = 400, C = 2...6",
     "rxn_params": {
         "k_plus": 400.0,
         "k_minus": 4.5,
@@ -7,9 +7,9 @@
         "tau_delay": 1.0
     },
     "sweep_params": {
-        "C_min": 4.0,
-        "C_max": 6.0,
-        "npoints": 11
+        "C_min": 2.0,
+        "C_max": 5.75,
+        "npoints": 16
     },
     "pdist_params": {
         "nbins": 60,
@@ -18,5 +18,5 @@
         "run_time": 801.0,
         "prune_itval": 5.0
     },
-    "runtime_minutes": NaN
+    "runtime_minutes": 26.5
 }
