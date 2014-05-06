@@ -43,26 +43,47 @@
 \label{sec:introduction}
 \begin{frame}
     \frametitle{Genetic Regulation}
-    \begin{columns}[t]
-        \begin{column}[t]{0.5\textwidth}
+    \begin{center}
+    \end{center}
+    \begin{columns}[c]
+        \begin{column}[c]{0.7\textwidth}
+            %\vspace{-0.5cm}
             \begin{itemize}
                 \item Genetic switches
                 \item Complex networks
-                \item Viewpoint of physics
+                \item New area of biophysics
             \end{itemize}
+            \includegraphics[width=\textwidth]{ecoli-switch.png} \footnotesize{\cite{decision-making}}
         \end{column}
-        \begin{column}[T]{0.5\textwidth}
-            \includegraphics[width=0.85\textwidth]{h_circadianPathway.png} \footnotesize{\cite{biocarta}}
+        \begin{column}[c]{0.3\textwidth}
+            \includegraphics[width=\textwidth]{h_circadianPathway.png} \footnotesize{\cite{biocarta}}
         \end{column}
     \end{columns}
+    \vspace{1.5cm}
 \end{frame}
 
 \begin{frame}
-    \frametitle{Synthetic Versions}
+    \frametitle{Synthetic Biology}
+
+    (Picture for synthetic biology)
+
+    \begin{itemize}
+        \item Synthetic cells instead of nanobots
+        \item Drug delivery
+        \item Biomolecule production
+        \item Artificial viruses
+        \item Replacement tissue
+    \end{itemize}
 \end{frame}
 
 \begin{frame}
     \frametitle{Cellular Scale}
+
+    \begin{center}
+        \includegraphics[height=0.6\textheight]{cell-stochasticity.png} \footnotesize{\cite{decision-making}}
+    \end{center}
+
+    (Mention stochasticity, $1/\sqrt{N}$ and how it applies to test tubes, cells)
 \end{frame}
 
 \begin{frame}
@@ -97,6 +118,14 @@
     \end{center}
 \end{frame}
 
+\begin{frame}
+    \frametitle{Effects of Delay}
+    \begin{itemize}
+        \item Even differential equations become much harder (example)
+        \item (Mention mathematical difficulty, non-Markovian, breaks existing theories)
+    \end{itemize}
+\end{frame}
+
 % section introduction (end)
 
 \section{Stochastic Chemical Kinetics} % (fold)
@@ -124,7 +153,7 @@
             \begin{itemize}
                 \item Significant at cellular scale
                 \item Concentrations fluctuate; no determinism
-                \item Concentrations are discrete (``populations'')
+                \item Concentrations are discrete (``populations''): Most models require continuous!
             \end{itemize}
         \end{column}
     \end{columns}
@@ -195,14 +224,18 @@
 
 \begin{frame}
     \frametitle{Conceptual Issues}
-    Non-uniform SSA timesteps
 
     \begin{center}
         \input{figures/wessa-timestep.pdf_tex}
     \end{center}
 
-    \pause
-    What about delayed reactions?
+    \begin{itemize}
+        \item SSA: Non-uniform timesteps
+        \item How I addressed the issue
+        \pause
+        \item What about delayed reactions?
+    \end{itemize}
+
 \end{frame}
 
 % section resampling (end)
@@ -285,6 +318,12 @@
 \end{frame}
 
 \begin{frame}
+    \frametitle{Master Equation For Delayed Degradation}
+
+    (Give explicit form, motivate delayed-joint distribution)
+\end{frame}
+
+\begin{frame}
     \frametitle{Delayed Joint Distribution}
     \begin{center}
         $\Prob \left(n(t) = p \text{ AND } n(t - \tau) = q \right)$
@@ -304,6 +343,12 @@
 
 \begin{frame}
     \frametitle{Conditional Average}
+
+    (Motivate cond'l average, introduce mean-field approximation)
+\end{frame}
+
+\begin{frame}
+    \frametitle{Conditional Average, Calculation}
 
     Average the $q$-values at every value of $p$
 
@@ -392,9 +437,9 @@
 \begin{frame}
     \frametitle{References}
     \begin{thebibliography}{9}
+        \bibitem{decision-making} Phys. Today 67, 2, 31 (2014); \url{http://dx.doi.org.ezp1.lib.umn.edu/10.1063/PT.3.2276}
         \bibitem{biocarta} ``Biocarta - Charting Pathways of Life.'' \url{http://www.biocarta.com/genes/index.asp}.
         \bibitem{gillespie-07} D. Gillespie, Annu. Rev. Phys. Chem. \textbf{58}, 35-55 (2007).
-        
     \end{thebibliography}
 \end{frame}
 
