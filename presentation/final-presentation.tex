@@ -1,0 +1,366 @@
+\documentclass[xcolor={usenames,dvipsnames,svgnames}]{beamer}
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{2212}{-}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{hyperref}
+\usepackage{mathtools}
+
+%\AtBeginSection[] { \begin{frame} \frametitle{Table of Contents}
+%\tableofcontents[currentsection] \end{frame} }
+\usetheme{Berlin}
+\usecolortheme{beaver}
+
+% Custom math commands, other shortcuts
+\newcommand{\tenexp}[1]{\times10^{#1}}
+\newcommand{\dee}{\;\mathsf{d}}
+\let\oldvec\vec
+\renewcommand{\vec}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\evec}[1]{\ensuremath{\vec{e}_{#1}}} % standard basis vector
+\newcommand{\norm}[2]{\ensuremath{\|#1\|_{#2}}}
+\newcommand{\bignorm}[2]{\ensuremath{\left\|#1\right\|_{#2}}}
+\newcommand{\infnorm}[1]{\ensuremath{\|#1\|_\infty}}
+\newcommand{\reals}{\ensuremath{\mathbb{R}}}
+\DeclareMathOperator{\Prob}{P}
+% Physics Domain-Specific
+\newcommand{\kB}{\ensuremath{k_\mathrm{B}}}
+% General Shortcuts
+\newcommand{\figref}[1]{Figure~\ref{#1}}
+\newcommand{\secref}[1]{Section~\ref{#1}}
+
+\newtheorem{assumption}{Assumption}
+
+\begin{document}
+\title[Genetic Networks]{Stochastic Simulation of Genetic Regulatory Networks}
+\author[Max Veit]{Max Veit\\Advisor: Jorge Viñals}
+\date[2014-05-07{7 May 2014}
+\institute[U of MN]{University of Minnesota}
+\subject{Physics}
+
+\frame{\titlepage}
+
+\section{Introduction} % (fold)
+\label{sec:introduction}
+\begin{frame}
+    \frametitle{Genetic Regulation}
+    \begin{columns}[t]
+        \begin{column}{0.5\textwidth}
+            \begin{itemize}
+                \item Genetic switches
+                \item Complex networks
+                \item Viewpoint of physics
+            \end{itemize}
+        \end{column}
+        \begin{column}[T]{0.5\textwidth}
+            \includegraphics[width=0.85\textwidth]{h_circadianPathway.png}
+
+            \small (Source: \cite{biocarta})
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Synthetic Versions}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Cellular Scale}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Representation}
+    \begin{itemize}
+        \item Reaction Equations
+        \item Chemical System
+    \end{itemize}
+    \begin{columns}[c]
+        \begin{column}{0.5\textwidth}
+            \begin{align*}
+                \varnothing \xrightarrow{A} X \\
+                X \xrightarrow {B} \varnothing
+            \end{align*}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            (Picture of chemical system)
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Biological ``Reactions''}
+    \begin{itemize}
+        \item Sequence of many small reactions
+        \item Need to account for time delay
+        %\item Abstract sequence into one reaction with a delay
+    \end{itemize}
+    %$\varnothing\quad\xrightarrow[(\tau)]{k}$
+    \begin{center}
+        \input{figures/dna-and-rna.pdf_tex}
+    \end{center}
+\end{frame}
+
+% section introduction (end)
+
+\section{Stochastic Chemical Kinetics} % (fold)
+\label{sec:modeling}
+
+\begin{frame}
+    \frametitle{First Approach}
+    \begin{itemize}
+        \item Continuum limit
+        \item Turn chemical equations into differential equations
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Stochastic Effects}
+    \begin{columns}[c]
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \resizebox{\textwidth}{!}{
+                    \input{figures/cont-stochastic.pgf}
+                }
+            \end{center}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{itemize}
+                \item Significant at cellular scale
+                \item Concentrations fluctuate; no determinism
+                \item Concentrations are discrete (``populations'')
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Finding the Probability Distribution}
+
+    \begin{itemize}
+        \item Assumptions on chemical system
+        \item Defining propensity \cite{gillespie-07}: $ P_j(\vec{x}, [t, t+\dee t]) = a_j(\vec{x})\dee t $
+        \item Reaction physics?
+        \item Result: Chemical master equation
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Gillespie SSA}
+    Monte Carlo method
+
+    (Picture illustrating how SSA works)
+\end{frame}
+
+\begin{frame}
+    \frametitle{Getting the Probability Distribution}
+    \begin{itemize}
+        \item Trajectory is only \emph{sample} of system
+        \item Make histogram
+    \end{itemize}
+\end{frame}
+
+% section modeling (end)
+
+\section{Weighted Ensemble} % (fold)
+\label{sec:resampling}
+
+\begin{frame}
+    \frametitle{More Complex Systems}
+    \begin{center}
+        \input{figures/bimodal.pdf_tex}
+    \end{center}
+
+    \begin{itemize}
+        \item Many stable states
+        \item Infrequent transitions
+        \item Inefficient sampling
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Weighted-Ensemble Resampling}
+    Each trajectory gets a weight $w_j$.\\
+    \begin{center}
+        \begin{overprint}
+            \onslide<1|handout:0>
+            \input{figures/wessa-seq00.pdf_tex}
+            \onslide<2|handout:0>
+            \input{figures/wessa-seq01.pdf_tex}
+            \onslide<3|handout:0>
+            \input{figures/wessa-seq02.pdf_tex}
+            \onslide<4>
+            \input{figures/wessa-seq03.pdf_tex}
+            \onslide<5>
+            \input{figures/wessa-seq04.pdf_tex}
+        \end{overprint}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Conceptual Issues}
+    Non-uniform SSA timesteps
+
+    \begin{center}
+        \input{figures/wessa-timestep.pdf_tex}
+    \end{center}
+
+    \pause
+    What about delayed reactions?
+\end{frame}
+
+% section resampling (end)
+
+\section{Results}
+
+\begin{frame}
+    \frametitle{Production-Degradation Results}
+    (Pretty plots, $\Omega A = 400$)
+\end{frame}
+
+\begin{frame}
+    \frametitle{Production-Degradation, Continued}
+    (Use updated results with $\Omega A = 100$)
+    \begin{center}
+        \resizebox{0.48\textwidth}{!}{
+            \input{../results/gaussian-verification-sdm.pgf}
+        }
+        \resizebox{0.48\textwidth}{!}{
+            \input{../results/gaussian-verification-chi.pgf}
+        }
+    \end{center}
+
+    \pause
+    Try a non-Markovian system.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Delayed-Degradation System}
+    \begin{columns}[c]
+        \begin{column}{0.5\textwidth}
+            \begin{align*}
+                \varnothing \xrightarrow{A} X \\
+                X \xrightarrow{B} \varnothing \\
+                X \xRightarrow[(\tau)]{C} \varnothing
+            \end{align*}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \resizebox{\textwidth}{!}{
+                    \input{figures/delayed-degradation.pgf}
+                }
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Delayed-Degradation Results}
+    (Use actual results from delayed-deg system)
+    \begin{center}
+        \resizebox{0.48\textwidth}{!}{
+            \input{../results/gaussian-verification-sdm.pgf}
+        }
+        \resizebox{0.48\textwidth}{!}{
+            \input{../results/gaussian-verification-chi.pgf}
+        }
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Delayed-Degradation, Continued}
+    (Use actual results from delayed-deg system)
+    \begin{center}
+        \resizebox{0.48\textwidth}{!}{
+            \input{../results/gaussian-verification-sdm.pgf}
+        }
+        \resizebox{0.48\textwidth}{!}{
+            \input{../results/gaussian-verification-chi.pgf}
+        }
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Delayed Joint Distribution}
+
+    $\Prob \left(n(t) = p \text{ AND } n(t - \tau) = q \right)$
+
+    (Picture illustrating computation of distribution)
+\end{frame}
+
+\begin{frame}
+    \frametitle{Qualitative Behavior}
+
+    (Picture of behavior against $C$)
+\end{frame}
+
+\begin{frame}
+    \frametitle{Conditional Average}
+
+    Average the $q$-values at every value of $p$
+
+    (Conditional average superimposed on distribution)
+
+    Possible assumption: Independent of $p$
+\end{frame}
+
+\begin{frame}
+    \frametitle{Stable Mode}
+
+    (Conditional average in stable mode)
+\end{frame}
+
+\begin{frame}
+    \frametitle{Near the Bifurcation}
+
+    (Conditional average at bifurcation, Langevin-limit prediction)
+
+    (Mention saturation)
+\end{frame}
+
+\begin{frame}
+    \frametitle{Oscillatory Mode}
+
+    (Conditional average in osc. mode, showing saturation)
+\end{frame}
+
+\begin{frame}
+    \frametitle{Summary}
+    \begin{itemize}
+        \item Effects of discreteness, stochasticity
+        \item Stochastic simulation with weighted ensemble
+        \item Unbiased sample, even with delays
+        \item Current work: Simulate more realistic systems
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Acknowledgments}
+    Jorge Viñals (Advisor)\\[2ex]
+
+    Vincent Noireaux (Reader)\\
+    Yiannis Kaznessis (Reader)\\[2ex]
+
+    Dan Dahlberg (Feedback \& Talks)
+\end{frame}
+
+\begin{frame}[plain]
+
+\hfill
+    \begin{beamercolorbox}[rounded=true, center, shadow=true,wd=6cm]{title}
+        \huge Questions?
+    \end{beamercolorbox}
+\hfill\hfill
+
+\end{frame}
+
+\appendix
+
+\begin{frame}
+    \frametitle{References}
+    \begin{thebibliography}{9}
+        \bibitem{biocarta} ``Biocarta - Charting Pathways of Life.'' \url{http://www.biocarta.com/genes/index.asp}.
+        \bibitem{gillespie-07} D. Gillespie, Annu. Rev. Phys. Chem. \textbf{58}, 35-55 (2007).
+        
+    \end{thebibliography}
+\end{frame}
+
+\end{document}
