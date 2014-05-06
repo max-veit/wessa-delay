@@ -121,17 +121,16 @@ class WeightedTrajectory(Trajectory):
             if np.isscalar(weights):
                 new_weight = weights
             else:
-                new_clone.weight = weights[cidx]
+                new_weight = weights[cidx]
             if cidx == 0:
                 self.weight = new_weight
                 continue
             new_clone = WeightedTrajectory(self.state,
                                            self.reactions,
                                            new_weight,
-                                           init_time=self.time)
+                                           init_time=self.init_time)
             # A deep copy is probably not necessary here, as the past
             # history should not be modified.
-            # TODO Consider selective omission of history
             new_clone.hist_times = copy(self.hist_times)
             new_clone.hist_states = copy(self.hist_states)
             new_clone.next_rxn = self.next_rxn
@@ -219,7 +218,7 @@ class Ensemble(object):
         self.bin_pop_range = bin_pop_range
         self.clone_num = 1
 
-    def run_step(self, resample=True):
+    def run_step(self, resample=True, prune=True):
         """
         Run one step of the Weighted Ensemble algorithm.
 
@@ -230,15 +229,19 @@ class Ensemble(object):
         Optional Parameters:
             resample    Whether to run the resampling procedure at the
                         beginning of the step. Default True.
+            prune       Whether to prune trajectory histories to save
+                        memory. Default True.
 
         """
+        if prune:
+            self._prune_all()
         if resample:
             self._resample()
         self._run_dynamics_all()
         self._recompute_bins()
         #self._record_state()
 
-    def run_time(self, duration, resample):
+    def run_time(self, duration, resample=True, prune=True, prune_itval=None):
         """
         Run this trajectory until a specified time is reached.
 
@@ -253,14 +256,26 @@ class Ensemble(object):
         Optional Parameters:
             resample    Whether to run the resampling procedure at the
                         beginning of each step. Default True.
+            prune       Whether to prune trajectory histories to save
+                        memory. Default True.
+            prune_itval Time interval at which to prune trajectories. If
+                        None (the default), pruning will be done at
+                        every step. Has no effect if prune==False.
 
         Returns:
             The ensemble time at the end of the last step.
 
         """
         stop_time = self.time + duration
+        last_prune_time = self.time
         while self.time < stop_time:
-            self.run_step(resample)
+            do_prune = prune and ((prune_itval is None) or
+                                  (self.time >= last_prune_time + prune_itval))
+            if do_prune:
+                self.run_step(resample, prune=True)
+                last_prune_time = self.time
+            else:
+                self.run_step(resample, prune=False)
         return self.time
 
     def get_pdist(self, paving=None):
@@ -292,6 +307,32 @@ class Ensemble(object):
         for bin_id, trjs in self.bins.items():
             weights[bin_id] = sum(trj.weight for trj in trjs)
         return weights
+
+    def get_bin_counts(self, paving=None):
+        """
+        Return the number of samples in each bin.
+
+        This is not the sum of weights within each bin, but rather the
+        integer number of weighted trajectories occupying that bin.
+
+        Parameters:
+            paving      The paving defining the regions over which to
+                        count the trajectories.If None (the default),
+                        the ensemble's internal paving is used.
+
+        Returns:
+            One-dimensional array, indexed by bin, giving the number of
+            trajectories in each bin.
+
+        """
+        if paving is not None:
+            raise NotImplementedError("No support for arbitrary pavings at " +
+                    "this time.")
+        self._recompute_bins()
+        counts = np.zeros((self.paving.num_bins))
+        for bin_id, trjs in self.bins.items():
+            counts[bin_id] = len(trjs)
+        return counts
 
     def _recompute_bins(self):
         """
@@ -340,6 +381,10 @@ class Ensemble(object):
         for traj in self:
             traj.run_dynamics(duration=None, stop_time=stop_time)
         self.time = stop_time
+
+    def _prune_all(self):
+        for traj in self:
+            traj.prune_history()
 
     def _resample(self):
         """Resample the phase space by modifying the bin populations."""

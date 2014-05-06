@@ -1,0 +1,22 @@
+{
+    "description": "Delayed-joint distribution, tau = 20.0, A = 1000, C = 1...5",
+    "rxn_params": {
+        "k_plus": 1000.0,
+        "k_minus": 3.0,
+        "k_delayed": 3.0,
+        "tau_delay": 20.0
+    },
+    "sweep_params": {
+        "C_min": 1.0,
+        "C_max": 5.0,
+        "npoints": 13
+    },
+    "pdist_params": {
+        "nbins": 60,
+        "binrange": [0.0, 600.0],
+        "init_state": [0],
+        "run_time": 820.0,
+        "prune_itval": 50.0
+    },
+    "runtime_minutes": 87
+}

@@ -161,6 +161,7 @@ class Trajectory(object):
         self.last_rxn_time = init_time
         self.rxn_tallies = defaultdict(lambda: 0)
         self.reject_tallies = defaultdict(lambda: 0)
+        self.max_delay = max(rxn.delay for rxn in self.reactions)
 
     def run_dynamics(self, duration, max_steps=None, stop_time=None):
 
@@ -277,7 +278,7 @@ class Trajectory(object):
                 state = self.state
             else:
                 state = self.sample_state(
-                    self.time - rxn.delay, use_init_state = True)
+                    self.time - rxn.delay, use_init_state=True)
             propensities[ridx] = rxn.calc_propensity(state)
         prop_csum = np.cumsum(propensities)
         total_prop = prop_csum[-1]
@@ -303,6 +304,35 @@ class Trajectory(object):
         """Save the trajectory state before pausing."""
         self.next_rxn = rxn
         self.next_rxn_time = time
+
+    def get_hist_index(self, time, use_init_state=False):
+        """
+        Return the index of the last reaction before the given time.
+
+        The index returned refers to this object's hist_times and
+        hist_states attributes. The time pointed to by this index is
+        equal to max(hist_times[hist_times <= time]).
+
+        Parameters:
+            time    Time to use to index the history
+
+        Optional Parameters:
+            use_init_state  Whether to return the starting index if the
+                            given time is earlier than this trajectory's
+                            starting time. Default False, in which case
+                            that condition raises a ValueError.
+
+        """
+        if (time > self.time) or (time < self.init_time and
+                                  not use_init_state):
+            raise ValueError("Out-of-bounds time " + str(time) + " received.")
+        if (time < self.init_time) and use_init_state:
+            return 0
+        idx = bisect.bisect_right(self.hist_times, time)
+        if idx > 0:
+            return idx - 1
+        else:
+            raise ValueError("Time {} not found in history.".format(time))
 
     def sample_state(self, time, use_init_state=False):
         """
@@ -334,6 +364,8 @@ class Trajectory(object):
         idx = bisect.bisect_right(self.hist_times, time)
         if idx > 0:
             return (self.hist_states)[idx - 1]
+        else:
+            raise ValueError("Time {} not found in history.".format(time))
 
     # TODO Implement use_init_state capability (like in sample_state)
     def sample_state_seq(self, times):
@@ -379,6 +411,14 @@ class Trajectory(object):
             states[:,tidx] = prev_state
         return states
 
+    def prune_history(self):
+        """Save memory by discarding unnecessary history."""
+        last_time = self.last_rxn_time - self.max_delay
+        prune_idx = bisect.bisect_right(self.hist_times, last_time)
+        if prune_idx > 0:
+            self.hist_times = self.hist_times[prune_idx - 1:]
+            self.hist_states = self.hist_states[prune_idx - 1:]
+
     def clone(self, num_clones):
         """
         Copy this trajectory to obtain num_clones _extra_ trajectories.
@@ -403,7 +443,7 @@ class Trajectory(object):
             if cidx == 0:
                 continue
             new_clone = Trajectory(self.state, self.reactions,
-                                   init_time=self.time)
+                                   init_time=self.init_time)
             # A deep copy is probably not necessary here, as the past
             # history should not be modified.
             # TODO Consider selective omission of history
