@@ -44,7 +44,7 @@
 \begin{frame}
     \frametitle{Genetic Regulation}
     \begin{columns}[t]
-        \begin{column}{0.5\textwidth}
+        \begin{column}[t]{0.5\textwidth}
             \begin{itemize}
                 \item Genetic switches
                 \item Complex networks
@@ -52,9 +52,7 @@
             \end{itemize}
         \end{column}
         \begin{column}[T]{0.5\textwidth}
-            \includegraphics[width=0.85\textwidth]{h_circadianPathway.png}
-
-            \small (Source: \cite{biocarta})
+            \includegraphics[width=0.85\textwidth]{h_circadianPathway.png} \footnotesize{\cite{biocarta}}
         \end{column}
     \end{columns}
 \end{frame}
@@ -213,18 +211,26 @@
 
 \begin{frame}
     \frametitle{Production-Degradation Results}
-    (Pretty plots, $\Omega A = 400$)
+    \begin{center}
+        \resizebox{0.48\textwidth}{!}{
+            \input{../results/presentation/pdwe-a400-cmp.pgf}
+        }
+        \resizebox{0.48\textwidth}{!}{
+            \input{../results/presentation/pdwe-a400-devs.pgf}
+        }
+    \end{center}
 \end{frame}
 
 \begin{frame}
     \frametitle{Production-Degradation, Continued}
-    (Use updated results with $\Omega A = 100$)
+    With a smaller system volume:
+
     \begin{center}
         \resizebox{0.48\textwidth}{!}{
-            \input{../results/gaussian-verification-sdm.pgf}
+            \input{../results/presentation/pdwe-a100-cmp.pgf}
         }
         \resizebox{0.48\textwidth}{!}{
-            \input{../results/gaussian-verification-chi.pgf}
+            \input{../results/presentation/pdwe-a100-devs.pgf}
         }
     \end{center}
 
@@ -254,42 +260,46 @@
 
 \begin{frame}
     \frametitle{Delayed-Degradation Results}
-    (Use actual results from delayed-deg system)
     \begin{center}
         \resizebox{0.48\textwidth}{!}{
-            \input{../results/gaussian-verification-sdm.pgf}
+            \input{../results/presentation/ddwe-t0.1-a800-cmp.pgf}
         }
         \resizebox{0.48\textwidth}{!}{
-            \input{../results/gaussian-verification-chi.pgf}
+            \input{../results/presentation/ddwe-t0.1-a800-devs.pgf}
         }
     \end{center}
 \end{frame}
 
 \begin{frame}
     \frametitle{Delayed-Degradation, Continued}
-    (Use actual results from delayed-deg system)
+    Now with a larger delay $\tau$:
+
     \begin{center}
         \resizebox{0.48\textwidth}{!}{
-            \input{../results/gaussian-verification-sdm.pgf}
+            \input{../results/presentation/ddwe-t1-a800-cmp.pgf}
         }
         \resizebox{0.48\textwidth}{!}{
-            \input{../results/gaussian-verification-chi.pgf}
+            \input{../results/presentation/ddwe-t1-a800-devs.pgf}
         }
     \end{center}
 \end{frame}
 
 \begin{frame}
     \frametitle{Delayed Joint Distribution}
+    \begin{center}
+        $\Prob \left(n(t) = p \text{ AND } n(t - \tau) = q \right)$
 
-    $\Prob \left(n(t) = p \text{ AND } n(t - \tau) = q \right)$
-
-    (Picture illustrating computation of distribution)
+        \includegraphics[height=0.6\textheight]{../results/presentation/ddjd-a100-c3.png}
+    \end{center}
 \end{frame}
 
 \begin{frame}
     \frametitle{Qualitative Behavior}
 
-    (Picture of behavior against $C$)
+    (Show with corresponding time-evolution plots)
+    \includegraphics[width=0.3\textwidth]{../results/presentation/ddjd-a100-c1.png}
+    \includegraphics[width=0.3\textwidth]{../results/presentation/ddjd-a100-c3,3.png}
+    \includegraphics[width=0.3\textwidth]{../results/presentation/ddjd-a100-c4,7.png}
 \end{frame}
 
 \begin{frame}
@@ -297,29 +307,54 @@
 
     Average the $q$-values at every value of $p$
 
-    (Conditional average superimposed on distribution)
+    %\resizebox{0.5\textwidth}{!}{
+        %\input{../results/presentation/ddjd-ca-a400-c5.pgf}
+    %}
+
+    \begin{center}
+        \includegraphics[width=0.5\textwidth]{../results/presentation/ddjd-ca-a100-c2-t1.png}
+    \end{center}
 
     Possible assumption: Independent of $p$
 \end{frame}
 
 \begin{frame}
     \frametitle{Stable Mode}
+    Independent of $p$?
 
-    (Conditional average in stable mode)
+    \begin{center}
+        \includegraphics[width=0.5\textwidth]{../results/presentation/ddjd-ca-a100-c2-t1-flat.png}
+    \end{center}
+
+    ...sort of.
+
 \end{frame}
 
 \begin{frame}
     \frametitle{Near the Bifurcation}
 
-    (Conditional average at bifurcation, Langevin-limit prediction)
+    \begin{overprint}
+        \onslide<1>
+        \begin{center}
+        \includegraphics[width=0.5\textwidth]{../results/presentation/ddjd-ca-a100-c5,8-t1.png}
+        \end{center}
+        \onslide<2>
+        \begin{center}
+        \includegraphics[width=0.5\textwidth]{../results/presentation/ddjd-ca-a400-c5-t1.png}
+        \end{center}
+    \end{overprint}
 
-    (Mention saturation)
+    Definitely not independent. Also note saturation.
 \end{frame}
 
 \begin{frame}
     \frametitle{Oscillatory Mode}
 
-    (Conditional average in osc. mode, showing saturation)
+    \begin{center}
+        \includegraphics[width=0.5\textwidth]{../results/presentation/ddjd-ca-a100-c5-t20.png}
+    \end{center}
+
+    Saturated value agrees with average of lower peak.
 \end{frame}
 
 \begin{frame}
