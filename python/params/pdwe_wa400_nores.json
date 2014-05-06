@@ -18,7 +18,7 @@
     "ens_params": {
         "ntrajs": 300,
         "nbins": 30,
-        "binrange": [0.0, 240.0],
+        "binrange": [90.0, 180.0],
         "phase_rand_time": 0.0,
         "step_time": 2.0,
         "tot_time": 60.0,
@@ -27,5 +27,5 @@
         "resample": false,
         "num_ens": 40
     },
-    "runtime_minutes": 153
+    "runtime_minutes": NaN
 }
