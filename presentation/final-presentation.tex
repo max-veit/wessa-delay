@@ -1,4 +1,4 @@
-\documentclass[xcolor={usenames,dvipsnames,svgnames}]{beamer}
+\documentclass[xcolor={usenames,dvipsnames,svgnames},url=hyphens]{beamer}
 \usepackage[utf8]{inputenc}
 \DeclareUnicodeCharacter{2212}{-}
 \usepackage{graphicx}
@@ -65,25 +65,33 @@
 \begin{frame}
     \frametitle{Synthetic Biology}
 
-    (Picture for synthetic biology)
-
-    \begin{itemize}
-        \item Synthetic cells instead of nanobots
-        \item Drug delivery
-        \item Biomolecule production
-        \item Artificial viruses
-        \item Replacement tissue
-    \end{itemize}
+    \begin{columns}[t]
+        \begin{column}[t]{0.4\textwidth}
+            \begin{itemize}
+                \item Synthetic cells instead of nanobots
+                \item Drug delivery
+                \item Biomolecule production
+                \item Artificial viruses
+                \item Replacement tissue
+            \end{itemize}
+        \end{column}
+        \begin{column}[T]{0.6\textwidth}
+            \includegraphics[width=\textwidth]{Artificial-Cells.jpg} \footnotesize{\cite{artificial-cell}}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}
-    \frametitle{Cellular Scale}
+    \frametitle{Stochasticity on the Cellular Scale}
 
     \begin{center}
         \includegraphics[height=0.6\textheight]{cell-stochasticity.png} \footnotesize{\cite{decision-making}}
     \end{center}
 
-    (Mention stochasticity, $1/\sqrt{N}$ and how it applies to test tubes, cells)
+    \begin{itemize}
+        \item Thermal fluctuations go as $1/\sqrt{N}$
+        \item Cellular differentiation
+    \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -92,17 +100,21 @@
         \item Reaction Equations
         \item Chemical System
     \end{itemize}
-    \begin{columns}[c]
-        \begin{column}{0.5\textwidth}
+    \begin{columns}
+        \begin{column}[T]{0.5\textwidth}
             \begin{align*}
                 \varnothing \xrightarrow{A} X \\
                 X \xrightarrow {B} \varnothing
             \end{align*}
+            \begin{center}
+                Continuum limit: $\frac{\partial x}{\partial t} = A - B x(t)$
+            \end{center}
         \end{column}
-        \begin{column}{0.5\textwidth}
-            (Picture of chemical system)
+        \begin{column}[T]{0.5\textwidth}
+            \includegraphics[width=\textwidth]{figures/chemical-system.pdf}
         \end{column}
     \end{columns}
+
 \end{frame}
 
 \begin{frame}
@@ -121,8 +133,15 @@
 \begin{frame}
     \frametitle{Effects of Delay}
     \begin{itemize}
-        \item Even differential equations become much harder (example)
-        \item (Mention mathematical difficulty, non-Markovian, breaks existing theories)
+        \item Even without stochasticity: Modeling much harder\\
+            \begin{equation*}
+                \frac{\partial x}{\partial t} = A + B x(t - \tau)
+            \end{equation*}
+
+            \begin{center}
+                ($\infty$-order DE!)
+            \end{center}
+        \item With stochasticity: non-Markovian, existing theories break
     \end{itemize}
 \end{frame}
 
@@ -132,15 +151,7 @@
 \label{sec:modeling}
 
 \begin{frame}
-    \frametitle{First Approach}
-    \begin{itemize}
-        \item Continuum limit
-        \item Turn chemical equations into differential equations
-    \end{itemize}
-\end{frame}
-
-\begin{frame}
-    \frametitle{Stochastic Effects}
+    \frametitle{Modeling Stochasticity}
     \begin{columns}[c]
         \begin{column}{0.5\textwidth}
             \begin{center}
@@ -151,9 +162,9 @@
         \end{column}
         \begin{column}{0.5\textwidth}
             \begin{itemize}
-                \item Significant at cellular scale
-                \item Concentrations fluctuate; no determinism
-                \item Concentrations are discrete (``populations''): Most models require continuous!
+                \item Differential equations: Only for large systems
+                \item Loss of determinism
+                \item Concentrations are discrete: Most models require continuous!
             \end{itemize}
         \end{column}
     \end{columns}
@@ -161,9 +172,11 @@
 
 \begin{frame}
     \frametitle{Finding the Probability Distribution}
-
+    Take an ``ideal'' chemical system:
+    \begin{center}
+        \includegraphics{figures/chem-sys-ideal.pdf}
+    \end{center}
     \begin{itemize}
-        \item Assumptions on chemical system
         \item Defining propensity \cite{gillespie-07}: $ P_j(\vec{x}, [t, t+\dee t]) = a_j(\vec{x})\dee t $
         \item Reaction physics?
         \item Result: Chemical master equation
@@ -172,9 +185,9 @@
 
 \begin{frame}
     \frametitle{Gillespie SSA}
-    Monte Carlo method
-
-    (Picture illustrating how SSA works)
+    \begin{center}
+        \includegraphics{figures/ssa-illustration.pdf}
+    \end{center}
 \end{frame}
 
 \begin{frame}
@@ -183,6 +196,9 @@
         \item Trajectory is only \emph{sample} of system
         \item Make histogram
     \end{itemize}
+    \begin{center}
+        \includegraphics{figures/histogram-illustration.pdf}
+    \end{center}
 \end{frame}
 
 % section modeling (end)
@@ -206,20 +222,28 @@
 \begin{frame}
     \frametitle{Weighted-Ensemble Resampling}
     Each trajectory gets a weight $w_j$.\\
-    \begin{center}
-        \begin{overprint}
+    \begin{overprint}
             \onslide<1|handout:0>
-            \input{figures/wessa-seq00.pdf_tex}
+            \begin{center}
+                \input{figures/wessa-seq00.pdf_tex}
+            \end{center}
             \onslide<2|handout:0>
-            \input{figures/wessa-seq01.pdf_tex}
+            \begin{center}
+                \input{figures/wessa-seq01.pdf_tex}
+            \end{center}
             \onslide<3|handout:0>
-            \input{figures/wessa-seq02.pdf_tex}
+            \begin{center}
+                \input{figures/wessa-seq02.pdf_tex}
+            \end{center}
             \onslide<4>
-            \input{figures/wessa-seq03.pdf_tex}
+            \begin{center}
+                \input{figures/wessa-seq03.pdf_tex}
+            \end{center}
             \onslide<5>
-            \input{figures/wessa-seq04.pdf_tex}
-        \end{overprint}
-    \end{center}
+            \begin{center}
+                \input{figures/wessa-seq04.pdf_tex}
+            \end{center}
+    \end{overprint}
 \end{frame}
 
 \begin{frame}
@@ -274,19 +298,15 @@
 \begin{frame}
     \frametitle{Delayed-Degradation System}
     \begin{columns}[c]
-        \begin{column}{0.5\textwidth}
+        \begin{column}{2cm}
             \begin{align*}
                 \varnothing \xrightarrow{A} X \\
                 X \xrightarrow{B} \varnothing \\
-                X \xRightarrow[(\tau)]{C} \varnothing
+                \alert{X \xRightarrow[(\tau)]{C} \varnothing}
             \end{align*}
         \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{center}
-                \resizebox{\textwidth}{!}{
-                    \input{figures/delayed-degradation.pgf}
-                }
-            \end{center}
+        \begin{column}{9cm}
+            \includegraphics{figures/dd-behavior.pdf}
         \end{column}
     \end{columns}
 \end{frame}
@@ -320,31 +340,43 @@
 \begin{frame}
     \frametitle{Master Equation For Delayed Degradation}
 
-    (Give explicit form, motivate delayed-joint distribution)
+    SSA is ``solving'' the equation
+
+    \begin{multline*}
+        \frac{\partial}{\partial t} \Prob(n, t) = A(\hat{E}^{-1} - 1) \Prob(n, t) + B n(\hat{E} - 1) \Prob(n, t) + \\
+        \sum_m H(n) C m (\hat{E} - 1) \alert{\Prob_2(n, t; m, t - \tau)}
+    \end{multline*}
+
+    Closure problem  ($\Prob_2$).
 \end{frame}
 
 \begin{frame}
     \frametitle{Delayed Joint Distribution}
-    \begin{center}
-        $\Prob \left(n(t) = p \text{ AND } n(t - \tau) = q \right)$
+    Computing from SSA trajectory:
 
-        \includegraphics[height=0.6\textheight]{../results/presentation/ddjd-a100-c3.png}
+    \begin{center}
+        \includegraphics{figures/jd-illustration.pdf}
     \end{center}
 \end{frame}
 
 \begin{frame}
     \frametitle{Qualitative Behavior}
 
-    (Show with corresponding time-evolution plots)
-    \includegraphics[width=0.3\textwidth]{../results/presentation/ddjd-a100-c1.png}
-    \includegraphics[width=0.3\textwidth]{../results/presentation/ddjd-a100-c3,3.png}
-    \includegraphics[width=0.3\textwidth]{../results/presentation/ddjd-a100-c4,7.png}
+    \includegraphics{figures/dd-joint-behavior.pdf}
 \end{frame}
 
 \begin{frame}
     \frametitle{Conditional Average}
 
-    (Motivate cond'l average, introduce mean-field approximation)
+    Rewriting master equation in terms of \emph{conditional average}:
+
+    \begin{multline*}
+        \frac{\partial}{\partial t} \Prob(n, t) = A(\hat{E}^{-1} - 1) \Prob(n, t) + B n(\hat{E} - 1) \Prob(n, t) + \\
+        C (\hat{E} - 1) (\alert{\langle m, t - \tau | n, t \rangle \Prob(n, t)})
+    \end{multline*}
+
+    Mean field: Take $\Prob_2(n, t; n, t - \tau) = \Prob(n, t)\Prob(m, t - \tau)$ so that $\langle m, t - \tau | n, t \rangle = \langle m \rangle$.
+    
 \end{frame}
 
 \begin{frame}
@@ -360,7 +392,7 @@
         \includegraphics[width=0.5\textwidth]{../results/presentation/ddjd-ca-a100-c2-t1.png}
     \end{center}
 
-    Possible assumption: Independent of $p$
+    Mean field: Independent of $p$
 \end{frame}
 
 \begin{frame}
@@ -439,6 +471,7 @@
     \begin{thebibliography}{9}
         \bibitem{decision-making} Phys. Today 67, 2, 31 (2014); \url{http://dx.doi.org.ezp1.lib.umn.edu/10.1063/PT.3.2276}
         \bibitem{biocarta} ``Biocarta - Charting Pathways of Life.'' \url{http://www.biocarta.com/genes/index.asp}.
+        \bibitem{artificial-cell} \url{http://www.popularmechanics.com/science/health/breakthroughs/how-lab-created-cells-could-target-tumors-and-deliver-drugs-7698240}
         \bibitem{gillespie-07} D. Gillespie, Annu. Rev. Phys. Chem. \textbf{58}, 35-55 (2007).
     \end{thebibliography}
 \end{frame}

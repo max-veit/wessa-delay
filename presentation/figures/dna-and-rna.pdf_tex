@@ -50,6 +50,6 @@
   \makeatother%
   \begin{picture}(1,0.61589312)%
     \put(0,0){\includegraphics[width=\unitlength]{figures/dna-and-rna.pdf}}%
-    \put(0.551809,0.05013663){\color[rgb]{0,0,0}\makebox(0,0)[rb]{\smash{$\varnothing\quad\xRightarrow[(\tau)]{k}$}}}%
+    \put(0.551809,0.05013663){\color[rgb]{0,0,0}\makebox(0,0)[rb]{\smash{$\varnothing\quad\xRightarrow[(\tau)]{A}$}}}%
   \end{picture}%
 \endgroup%
