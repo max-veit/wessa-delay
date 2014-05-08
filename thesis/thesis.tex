@@ -100,16 +100,35 @@
 % -- Replace occurrences of "one" with the less-awkward royal "we"
 % Watch for long prepositional phrases
 
+\pagenumbering{roman}
 %TODO Format the title page according to UHP requirements (including acknowledgements, non-technical summary, etc.
 \maketitle
 
-% May not be necessary, but nice to have for now.
+\chapter*{Acknowledgments} % (fold)
+\label{sec:acknowledgements}
+
+I would like to thank my advisor, Professor Jorge Viñals, for his helpful guidance throughout this project and for his suggestions for improving my computational approaches and algorithms. I also thank Professor Vincent Noireaux and Professor Yiannis Kaznessis for reviewing this thesis and offering useful comments.
+
+Finally, I would like to thank the authors and contributors of the IPython interactive scientific computing system~\cite{PER-GRA:2007} (and related projects), which has been extremely useful in developing and testing my code and in exploring, visualizing and interpreting the resulting data.
+% section acknowledgements (end)
+
+\chapter*{Abstract}
+Abstract goes here.
+
+\section*{Non-technical Summary}
+(Optional)
+
+\pagebreak[4]
+
 \tableofcontents
 
 \begin{doublespacing}
 
+
 \chapter{Introduction} % (fold)
 \label{sec:introduction}
+
+\pagenumbering{arabic}
 
 %TODO Background references look a little thin - maybe add some more from browsing around?
 Recent research in biological physics~\cite{ecoli-decision} indicates that the behavior and internal workings of a living cell are much more rich and complex than the bare instructions coded into its DNA would suggest. For example, an individual section of DNA can be turned off when a repressor protein binds to the beginning of that section. Such mechanisms provide cells a way to change the expression of their DNA, i.e. to control which proteins are produced from their genes and in what amounts, an ability known as (genetic) transcriptional regulation. This ability allows genetically identical cells to adapt their behavior to different environments or to differentiate into different types of cells as in the development of a multicellular organism. Developing models for the selective expression of genes is key to understanding how cells perform their daily functions and respond to their enviroments.
@@ -118,7 +137,7 @@ Another interesting feature of transcriptional regulation is the presence of fee
 
 Many diverse strategies have been employed to model genetic regulatory networks~\cite{review-in-numero}\cite{bistable-modeling}\cite{gillespie-ssa}\cite{langevin-limit}. Many such models \todo{examples} approximate genetic regulation as a deterministic process. However, in very small systems (such as cells) where the effects of the finiteness of molecular populations become apparent, thermal fluctuations would be expected in inject a relatively large amount of stochasticity into the process. Recent experiments and theoretical considerations~\cite{ecoli-decision}\cite{stoch-theories}\cite{stoch-single-cell} make it clear that this stochasticity has a major influence on the function of these networks. In particular, there is a large amount of variation in genetic expression between individual cells in genetically identical colonies.
 
-One way of accounting for this stochasticity is a technique known as system size expansion, which treats the concentrations of chemical species as continuous quantities, without any restriction that they be positive \todo{cite langevin-limit publication, research notes}. However, these models break down in a fundamental way when considering very small numbers of molecules, where the inherent discreteness of molecular concentrations plays an important role. \todo{could mention unstable oscillations in delayed-degradation system...}
+One way of accounting for this stochasticity is a technique known as system size expansion, which treats the concentrations of chemical species as continuous quantities, without any restriction that they be positive \todo{cite langevin-limit publication, research notes}. However, these models break down in a fundamental way when considering very small numbers of molecules, where the inherent discreteness of molecular concentrations plays an important role.
 
 The method explored in this work is to directly simulate the sequence of chemical reactions occurring in the cell using a Monte Carlo algorithm that naturally accounts for the stochasticity in discreteness present in small systems. The algorithm is known as the Gillespie stochastic simulation algorithm (SSA) and has seen use before in the context of genetic networks~\cite{we-chemkin}\cite{stoch-sys-bio}. The aim of this work is to extend the SSA to make it more practical for simulating real-world (natural or synthetic) genetic regulatory networks in order to analyze their behavior.
 
@@ -215,7 +234,7 @@ The SSA generates trajectories (with the initial conditions $\vec{x}(t_0) = \vec
 \end{enumerate}
 The iteration is continued typically until the time $t$ reaches (exceeds) a predefined stop time. Since a chemical system remains in its current state until another reaction occurs, the sequence $\left(\vec{x_n}, t_n\right)_{n=1}^N$ can be interpreted as the continuous-time trajectory $\vec{x}(t)$ of the instance.
 
-\todo{Explain physical origin of probability distributions}
+The form of the probability distributions in Step~2 derive in a straightforward way from the same assumption used to derive the chemical master equation. In a sense, the master equation and the SSA are two equivalent formulations of the same underlying theory.
 
 % subsection gillespie-ssa (end)
 
@@ -228,7 +247,7 @@ In this work, a method that more closely follows the analytical modeling of dela
 
 One undesirable feature is introduced by including delayed reactions using either method: Since the delayed reactions lag behind the current state, it is possible for individual concentrations to go below zero, an obviously unphysical result. In the non-delayed SSA, any reaction that could decrease the concentration $x_i$ has a propensity proportional to that concentration (to some power). Therefore, when $x_i$ goes to zero, any reaction that could decrease $x_i$ has a zero propensity and is blocked from running. A delayed reaction, however, does not ``notice'' zero concentrations in real time so it is not blocked in time to avoid decreasing concentrations from zero\footnote{Some analytical models of delayed systems have this problem owing to the difficulty of analytically constraining concentrations to be nonnegative. The result is often nonsensical behavior, such as oscillations with exponentially increasing amplitude.}.
 
-One solution is to manually impose the constraint $x_i \geq 0\; \forall i$, which is much easier to do within the SSA than in analytical models. The method used in this work is to manually block the offending reactions: In Step~2 of the SSA, if a reaction is selected that would make any individual concentration go negative, the reaction is discarded and another is selected. (This amounts to manually setting that reaction's propensity to zero.) \todo{May change code to actually set propensity to zero - stay tuned}
+One solution is to manually impose the constraint $x_i \geq 0\; \forall i$, which is much easier to do within the SSA than in analytical models. The method used in this work is to manually block the offending reactions: In Step~2 of the SSA, if a reaction is selected that would make any individual concentration go negative, the reaction is discarded and another is selected. This procedure amounts to manually setting that reaction's propensity to zero.
 
 % subsection non-markovian (end)
 
@@ -241,10 +260,9 @@ The main issue with this method is that it generally samples state space unevenl
 \todo{Examples relating to genetic networks? Bistable/Schlögl systems, maybe?}
 In many cases, \todo{Illustrative example?} one would need to use a prohibitively large number of trajectories to adequately sample the improbable transition regions.
 
-\todo{Many different ways of dealing with this problem - mention a few used besides the WE?}
-\todo{Why WE used? Statistically exact, straightforward implementation, generality, applicability to high-dimensional spaces}
+Many methods are available to obtain a more uniform and efficient sample of the phase space. \todo{give examples} The method used in this work is known (in the context of molecular dynamics and stochastic simulation) as the \defkeywd{weighted ensemble} (WE) method~\cite{we-orig}, a type of importance sampling. This method was chosen because of its straightforward implementation, statistically exact properties, and its generality and applicability to high-dimensional concentration spaces. \todo{some references would be nice}
 
-To more uniformly and efficiently sample the phase space, one can use a method known (in the context of molecular dynamics and stochastic simulation) as the \defkeywd{weighted ensemble} (WE) method~\cite{we-orig}, a type of importance sampling. The basic strategy is to periodically redistribute the samples in a way that does not change the final estimate of the probability distribution $P(\vec{x}, t | \vec{x}_0, t_0)$. This is achieved by assigning each trajectory a \defkeywd{weight} $w_k$ such that the sum of all weights is always 1. In effect, the method biases the underlying distribution so that rare events are sampled as frequently as the common ones while keeping track of weights in order to obtain a sample of the original, \emph{unbiased} probability distribution.
+The basic strategy of the WE method is to periodically redistribute the samples in a way that does not change the final estimate of the probability distribution $P(\vec{x}, t | \vec{x}_0, t_0)$. This is achieved by assigning each trajectory a \defkeywd{weight} $w_k$ such that the sum of all weights is always 1. In effect, the method biases the underlying distribution so that rare events are sampled as frequently as the common ones while keeping track of weights in order to obtain a sample of the original, \emph{unbiased} probability distribution.
 
 The WE method has been applied to stochastic chemical kinetics before; see~\cite{we-chemkin}. The method used in this work generally follows the version presented in the paper. The overall procedure is as follows: First, choose an initial ensemble of $P$ trajectories. Then, repeat the following steps as many times as desired:
 \begin{enumerate}
@@ -437,7 +455,7 @@ One of the simplest possible systems that includes delayed reactions is the dela
 \end{align}
 This is simply the production-degradation system with an additional reaction added; the notation for the third reaction means it is a delayed reaction with propensity constant $C$ (analogous to $B$) and delay $\tau$. As in the simple production-degradation model the parameter $A$ sets the scale of the system, absorbing the system volume $\Omega$.
 
-The additional delayed reaction has a profound effect on the overall qualitative behavior of this system. For large enough values of $C$ the system undergoes a Hopf bifurcation and the concentration oscillates periodically between two values (the ``oscillatory mode''). However, for smaller values of $C$ the system behaves much like the simple production-degradation system, fluctuating about a stable mean value (the ``stable mode''). An analytical form for the probability distribution is only available for the stable mode. In the limit of short delay $\tau$, the distribution is \cite{delayed-deg-notes}
+The additional delayed reaction has a profound effect on the overall qualitative behavior of this system. As the value of $C$ is varied, the system undergoes a \defkeywd{bifurcation}, i.e. the system goes into a different qualitative mode of behavior. For large enough values of $C$, the concentration oscillates periodically between two values (the ``oscillatory mode''). However, for smaller values of $C$ the system behaves much like the simple production-degradation system, fluctuating about a stable mean value (the ``stable mode''). An analytical form for the probability distribution is only available for the stable mode. In the limit of short delay $\tau$, the distribution is \cite{delayed-deg-notes}
 \begin{equation}
     P(\xi) = \sqrt{\frac{B + C}{2\pi(1 + C\tau)}}\exp\left( -\frac{B + C}{2(1 + C\tau)} \xi^2 \right)
     \label{eq:dd-analytic-dist}
@@ -449,11 +467,7 @@ where $\xi$ is defined as in Section~\ref{sec:simple-pd}, only here the steady-s
 
 The procedure used to assess the effect of resampling on the numerical probability distribution for this system is the same as the one of Section~\ref{sub:pd-we-verif}, with a few modifications. The first modification accounts for the fact that the delay introduces an effective phase to each trajectory (the effect is more obvious in the oscillatory mode). To ensure that the probability distributions were sampled uniformly over this phase, the starting times of the seed trajectories were randomized relative to each other. Specifically, the initial time of each trajectory, relative to the ensemble time, was drawn from a uniform distribution on $[0, \tau]$.
 
-Second, the total time $T$ that each ensemble was run had to be chosen to avoid any effects due to the initial phase randomization. The value $T = 3\tau$ was deemed a safe choice for this purpose, as trajectories sample their histories only as far as $\tau$ time units earlier. By time $3\tau$, all trajectories would have been sampling active histories (that is, not sampling earlier than their starting times) for at least $\tau$ time units.
-
-Figure~\ref{fig:ddwe0} shows a comparison between the simulation results, both with and without resampling, and the analytical distribution \eqref{eq:dd-analytic-dist}. As expected, the simulations agree well with the analytical distribution for relatively short delay of $\tau = 0.1$. The agreement with the analytical distribution begins to break down for larger values of $\tau$ as in Figure~\ref{fig:ddwe1}. However, the distributions obtained with resampling and without using resampling still agree well with each other, with no systematic differences visible. 
-
-\begin{figure}[t]
+\begin{figure}[tbp]
     \makebox[\linewidth][c]{
         \begin{subfigure}{3in}
             \begin{center}
@@ -472,7 +486,9 @@ Figure~\ref{fig:ddwe0} shows a comparison between the simulation results, both w
     \label{fig:ddwe0}
 \end{figure}
 
-\begin{figure}[t]
+Second, the total time $T$ that each ensemble was run had to be chosen to avoid any effects due to the initial phase randomization. The value $T = 3\tau$ was deemed a safe choice for this purpose, as trajectories sample their histories only as far as $\tau$ time units earlier. By time $3\tau$, all trajectories would have been sampling active histories (that is, not sampling earlier than their starting times) for at least $\tau$ time units.
+
+\begin{figure}[tbp]
     \makebox[\linewidth][c]{
         \begin{subfigure}{3in}
             \begin{center}
@@ -491,13 +507,34 @@ Figure~\ref{fig:ddwe0} shows a comparison between the simulation results, both w
     \label{fig:ddwe1}
 \end{figure}
 
+Figure~\ref{fig:ddwe0} shows a comparison between the simulation results, both with and without resampling, and the analytical distribution \eqref{eq:dd-analytic-dist}. As expected, the simulations agree well with the analytical distribution for relatively short delay of $\tau = 0.1$. The agreement with the analytical distribution begins to break down for larger values of $\tau$ as in Figure~\ref{fig:ddwe1}. However, as Figure~\ref{fig:ddwe-resdevs} shows, the distributions obtained with resampling and without using resampling still agree well with each other, with no obvious systematic differences. 
+
+\begin{figure}[tbp]
+    \makebox[\linewidth][c]{
+        \begin{subfigure}{3in}
+            \begin{center}
+                \input{../results/thesis/ddwe-t0,1-a800-resdevs.pgf}
+            \end{center}
+            \label{sfg:ddwe-resdevs0}
+        \end{subfigure}
+        \begin{subfigure}{3in}
+            \begin{center}
+                \input{../results/thesis/ddwe-t1-a800-resdevs.pgf}
+            \end{center}
+            \label{sfg:ddwe-resdevs1}
+        \end{subfigure}
+    }
+    \caption{Differences between the distributions obtained with and without reweighting, normalized by the two-parameter standard deviations $\sqrt{\sigma_\text{res}^2 + \sigma_\text{nonres}^2}$ for each bin. Parameters: $A=800$, $B=3$, $C=1$. Left: $\tau = 0.1$. Right: $\tau = 1$.}
+    \label{fig:ddwe-resdevs}
+\end{figure}
+
 Based on this data, we can tentatively conclude that weighted-ensemble resampling does not bias our estimate of the steady-state probability distribution of the delayed-degradation system. This is a stronger conclusion than the one for the simple production-degradation system. This data provides strong evidence that, even in the presence of delayed reactions, the WE resampling method does not have a biasing effect. It remains to be seen whether this conclusion holds in general for more complex delayed systems, although this data does provide good reason to be optimistic.
 
 % subsection dd-we-verif (end)
 
 \subsection{Delayed Joint Probability Distribution} % (fold)
 \label{sub:delayed-joint-dist}
-The chemical master equation (Equation \eqref{eq:master-eqn-delay}) written for this system takes the form:
+The chemical master equation (Equation \eqref{eq:master-eqn-delay}) written for the delayed-degradation system takes the form:
 \begin{multline}
     \frac{\partial}{\partial t} \Prob(n, t) = A(\hat{E}^{-1} - 1) \Prob(n, t) + B n(\hat{E} - 1) \Prob(n, t) + \\
     \sum_{m=0}^{\infty} H(n) C m (\hat{E} - 1) \Prob_2(n, t; m, t - \tau)
@@ -522,7 +559,7 @@ The master equation then takes the form \cite{delayed-deg-notes}:
     \label{eq:master-eqn-dd-ca}
 \end{multline}
 
-One method for modeling the delayed joint distribution is used in \cite{delay-oscillations}, a type of mean-field approximation where events at time $t$ are assumed to be decorrelated from events at time $t - \tau$. This assumption implies $\langle m, t - \tau | n, t \rangle = \langle m, t - \tau \rangle$ -- in other words, that the conditional average of $m(t - \tau)$ is a constant that does not depend on $n(t)$. The authors of \cite{delay-oscillations} note that in order for this assumption to hold, the coupling between events at time $t$ and $t - \tau$, which is controlled by the value of $C$, must be relatively small. In other words, it could very well break down close to the bifurcation.
+One method for modeling the delayed joint distribution is used in \cite{delay-oscillations}, a type of mean-field approximation where events at time $t$ are assumed to be decorrelated from events at time $t - \tau$. This assumption implies $\langle m, t - \tau | n, t \rangle = \langle m, t - \tau \rangle$ -- in other words, that the conditional average of $m(t - \tau)$ is a constant that does not depend on $n(t)$. The authors of \cite{delay-oscillations} note that in order for this assumption to hold, the coupling between events at time $t$ and $t - \tau$, which is controlled by the value of $C$, should be relatively small. The approximation could very well break down close to the bifurcation.
 
 One way to evaluate the conditions under which this assumption holds is to use numerical simulation, which does not suffer from the closure problem encountered in analytical models. It is possible to compute the delayed joint distribution based on a single trajectory generated by the SSA. Interpreting the sequence $(n_i, t_i)$ as a continuous-time trajectory $n(t)$, the probability $P_2(p, t; q, t - \tau)$ is proportional to the amount of time the system spends in the state $n(t) = p; n(t - \tau) = q$. More formally,
 \begin{equation}
@@ -531,30 +568,27 @@ One way to evaluate the conditions under which this assumption holds is to use n
 \end{equation}
 where $t_0$ is at least $\tau$ time units later than the trajectory's starting time; $\delta_{i,j}$ is the Kronecker delta symbol. The conditional average is then straightforward to calculate from Equation~\eqref{eq:cond-avg-def}.
 
-\todo{describe qualitative behavior of cond'l average (unimodal to bimodal)}
-
-\todo{better introduce prediction for cond'l average near bifurcation}
-
-Another model for the conditional average can be made in the Langevin limit and near the stochastic bifurcation point. In terms of the normalized fluctuation $\xi = \frac{n - n^\star}{\sqrt{A}}$ defined in Section~\ref{sub:dd-we-verif}, the conditional average in ths limit is the linear function \cite{delayed-deg-notes}
-\begin{equation}
-    \langle \xi, t - \tau | \xi \rangle = \left( \frac{\omega \cos(\omega \tau) - B \sin(\omega \tau)}{\omega + C \sin(\omega \tau)}\xi \right)
-    \label{eq:cond-avg-linear}
-\end{equation}
-with the Hopf frequency $\omega = \sqrt{C^2 - B^2}$ (so this equation is only valid for $C > B$).
-
 \begin{figure}[htb]
     \makebox[\linewidth][c]{
         \includegraphics{../results/thesis/ddjd-a100-b3-t20-csweep.png}
     }
     \caption{Behavior of the delayed-joint distribution as the parameter $C$ is varied. The parameters $A=100$, $B=3$, and $\tau=20$ were kept fixed; each distribution was computed from $T = t_1 - t_0 = 800$ time units of a single SSA trajectory with initial state $x_0 = 0$.}
+    \label{fig:ddjd-sweep}
 \end{figure}
+
+Figure~\ref{fig:ddjd-sweep} shows the qualitative behavior of the delayed joint distribution as the parameter $C$ (the coupling between events at time $t$ and time $t - \tau$) is varied. For very weak coupling, the distribution is essentially an uncorrelated two-dimensional Gaussian. As the coupling is increased, however, the central peak stretches and eventually splits into two. For very high coupling, the distribution is characterized by two completely separated peaks.
 
 \begin{figure}
     \begin{center}
         \includegraphics{../results/thesis/ddjd-ca-a100-c2-t1.png}
     \end{center}
-    \caption{Conditional average of the delayed-joint distribution with $A=100$, $B=3$, $C=2$, and $\tau=1$ computed from $T=800$ time units of an SSA trajectory, showing approximate independence of the conditional average of $q$ from $p$. The flat magenta line indicates the average value of $q$ over the entire trajectory.}
+    \caption{Conditional average of the delayed-joint distribution with $A=100$, $B=3$, $C=2$, and $\tau=1$ computed from $T=800$ time units of an SSA trajectory, showing approximate independence of the conditional average of $q$ from $p$. The flat magenta line indicates the average value of $q$ over the entire trajectory. The delayed-joint distribution is provided in the background for context; the conditional average is simply a moment of that distribution.}
+    \label{fig:ddjd-stable}
 \end{figure}
+
+We can evaluate the extent to which the mean-field approximation applies to the system by computing the conditional average of the SSA-derived distribution. The conditional average $\langle q, t - \tau | p, t \rangle$ for a reasonably small value of $C$ is shown in Figure~\ref{fig:ddjd-stable}. The mean-field approximation implies that the conditional average is independent of $p$, or a horizontal line on the plot in Figure~\ref{fig:ddjd-stable}. The approximation appears reasonably good for the value of $C$ shown there; we could expect better agreement with a smaller value of $C$.
+
+Closer to the bifurcation, however, this approximation completely breaks down. Figure~\ref{fig:ddjd-bif} shows an example for a value of $C$ just below the stochastic bifurcation point. The highly correlated nature of the delayed-joint distribution in this regime evidently requires a different description from the mean-field approximation.
 
 \begin{figure}
     \makebox[\linewidth][c]{
@@ -566,14 +600,29 @@ with the Hopf frequency $\omega = \sqrt{C^2 - B^2}$ (so this equation is only va
     \end{subfigure}
     }
     \caption{Conditional average of the delayed-joint distribution near the bifurcation, showing a breakdown of the mean-field approximation and saturation for large values of $p$. Left: $A=400$, $B=4.5$, $C=5$, and $\tau=1$. Right: $A=100$, $B=4.5$, $C=5.75$, and $\tau=1$. The straight blue line indicates the prediction of Equation~\eqref{eq:cond-avg-linear}. Each distribution computed from $T=800$ time units of an SSA trajectory.}
+    \label{fig:ddjd-bif}
 \end{figure}
+
+Another model for the conditional average can be made in the Langevin limit and near the stochastic bifurcation point. In terms of the normalized fluctuation $\xi = \frac{n - n^\star}{\sqrt{A}}$ defined in Section~\ref{sub:dd-we-verif}, the conditional average in ths limit is the linear function \cite{delayed-deg-notes}
+\begin{equation}
+    \langle \xi, t - \tau | \xi \rangle = \left( \frac{\omega \cos(\omega \tau) - B \sin(\omega \tau)}{\omega + C \sin(\omega \tau)}\right)\xi 
+    \label{eq:cond-avg-linear}
+\end{equation}
+with the Hopf frequency $\omega = \sqrt{C^2 - B^2}$, so this equation is only valid for $C > B$. The derivation of this formula also assumes the system is below the stochastic bifurcation point\footnote{The stochastic bifurcation point is in general different from the bifurcation point that can be derived from a deterministic description of this system. Stochastic effects shift the bifurcation, opening up a ``window'' in which Equation~\eqref{eq:cond-avg-linear} can be applied.}, i.e. that the delayed-joint distribution is unimodal.
+
+This formula agrees well with the computed conditional average within a certain range of $p$, as Figure~\ref{fig:ddjd-bif} shows. However, an interesting effect occurs for large values of $p$, where the computed conditional average deviates from Equation~\ref{eq:cond-avg-linear}. In the complete stochastic description modeled by the SSA the number $n$ cannot go below zero. This means that the conditional average must eventually flatten out, or saturate, for large values of $p$. The Langevin limit does not generally impose this constraint, so the conditional average as predicted by Equation~\eqref{eq:cond-avg-linear} does go below zero above some value of $p$.
+
+The saturation effect is most important in small systems because they have lower average concentrations and spend more of their time close to $n=0$. This observation is consistent with the fact that the Langevin limit, which in this case fails to account for saturation, becomes more accurate as the system volume is increased.
 
 \begin{figure}
     \begin{center}
         \includegraphics{../results/thesis/ddjd-ca-a100-c5-t20.png}
     \end{center}
     \caption{Conditional average of the delayed-joint distribution with $A=100$, $B=3$, $C=5$, and $\tau=20$ computed from $T=800$ time units of an SSA trajectory, showing saturation to a constant value. The flat blue line indicates the average value of $n(t-\tau)$ only over the lower peak.}
+    \label{fig:ddjd-osc-sat}
 \end{figure}
+
+Interestingly enough, the saturation effect appears to partially restore the mean-field approximation in the oscillatory mode. As Figure~\ref{fig:ddjd-osc-sat} shows, the conditional average for an oscillating system becomes essentially constant for large enough values of $p$. Thus, we can cautiously assume (for large enough values of $p$) that the conditional average $\langle q, t - \tau | p, t \rangle$ is independent on \emph{both} sides of the bifurcation.
 
 % subsection delayed-joint-dist (end)
 
@@ -582,9 +631,9 @@ with the Hopf frequency $\omega = \sqrt{C^2 - B^2}$ (so this equation is only va
 \chapter{Conclusions and Future Work} % (fold)
 \label{sec:conclusions}
 
-The weighted-ensemble stochastic simulation algorithm is a useful tool for studying genetic networks with delays. The SSA explicitly treats the discreteness and stochasticity that become significant in small systems, allowing them to be described in a statistically exact manner. In addition, it is straightforward to extend the SSA to include delayed reactions. The WE resampling method ensures that the system's state space is sampled evenly, enabling the efficient simulation of realistic, complex genetic networks. Results from this work inidicate that the resampling maintains statistical accuracy, i.e. it does not bias the measured distribution, even in systems containing delayed reactions.
+The weighted-ensemble stochastic simulation algorithm is a useful tool for studying genetic networks with delays. The SSA explicitly treats the discreteness and stochasticity that become significant in small systems, allowing us to describe them in a statistically exact manner. In addition, it is straightforward to extend the SSA to include delayed reactions. The WE resampling method ensures that the system's state space is sampled evenly, enabling us to simulate realistic, complex genetic networks efficiently. Results from this work inidicate that the resampling maintains statistical accuracy, i.e. that we can obtain an unbiased estimate the measured distribution, even in systems containing delayed reactions.
 
-An important application of numerical simulation is to assess approximations or assumptions that analytical models make to study a system's behavior. In the specific case of the delayed-degradation system, one such assumption is that the behavior of the system decorrelates on the timescale $\tau$. However, the numerical results presented here do not support that assumption when the system is close to its bifurcation point.
+The results of Section~\ref{sub:delayed-joint-dist} illustrate another important application of the SSA as a statistically exact numerical simulation. We can use it to assess approximations or assumptions that analytical models make to study a system's behavior. We can also use it as a stand-alone tool to explore how a system behaves. The example discussed in Section~\ref{sub:delayed-joint-dist} was the delayed-degradation system, where we saw that the behavior of the system is decorrelated on the timescale $\tau$ as long as the delayed reaction fires relatively rarely. This approximation breaks down near the bifurcation point. However, we saw that the approximation is restored in some sense on the other side of the bifurcation. This is a conclusion that is not at all obvious from an analytical description of the system.
 
 % Future Work
 The next step in this project is to model systems that are also realizable experimentally. A comparison between numerical predictions and experimental results would serve as an excellent check on the validity of the assumptions underlying the application of the SSA to genetic networks.
@@ -605,15 +654,6 @@ Although it may seem improper to model a complex cellular environment as a simpl
 % chapter results (end)
 
 \appendix
-
-\chapter{Acknowledgments} % (fold)
-\label{sec:acknowledgements}
-\todo{Needs to go before abstract}
-
-I would like to thank my advisor, Professor Jorge Viñals, for his helpful guidance throughout this project and for his critical assessments of my computational approaches and algorithms. I also thank Professor Vincent Noireaux and Professor Yiannis Kaznessis for reviewing this thesis.
-
-Finally, I would like to thank the authors and contributors of the IPython interactive scientific computing system~\cite{PER-GRA:2007} (and related projects), which has been extremely useful in developing and testing my code and in exploring, visualizing and interpreting the resulting data.
-% section acknowledgements (end)
 
 \chapter{Technical Notes} % (fold)
 \label{sec:tech-notes}
