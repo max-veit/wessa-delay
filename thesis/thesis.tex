@@ -393,7 +393,7 @@ A comparison between the resampled and non-resampled distributions with a reason
             \label{sfg:pdwe1-chi}
         \end{subfigure}
     }
-    \caption{Left: comparison of weighted and non-reweighted ensembles against the analytical distribution for the simple production-degradation system with $A=100$ and $B=3$ ($T=60$), showing discreteness effects. The discrete minimum $n=0$ corresponds to $\xi \approx -3.3$. Right: differences from the analytical distribution, normalized by each estimate's standard deviation.}
+    \caption{Left: comparison of weighted and non-reweighted ensembles against the analytical distribution for the simple production-degradation system with $A=100$ and $B=3$ ($T=60$, $\tau_p = 0.02$), showing discreteness effects. The discrete minimum $n=0$ corresponds to $\xi \approx -3.3$. Right: differences from the analytical distribution, normalized by each estimate's standard deviation.}
     \label{fig:pdwe1}
 \end{figure}
 
@@ -407,9 +407,11 @@ In order to compare the two distributions in a statistically meaningful way, it 
     \label{fig:pdwe-varcloseup}
 \end{figure}
 
-We would expect to see the weighted ensemble method improving our sampling over low-probability regions of the concentration space. Intuitively, if a bin has been visited by 10 trajectories, one can be much more certain about the reported value for that bin than if only one trajectory was found there. This improved sampling should manifest itself in a reduced variance in the values of the bins at the tails of the distribution. As Figure~\ref{fig:pdwe-varcloseup} shows, though, the na\"ive estimates of the bin variances are inconsistent with this expectation. Estimated variances for the resampled and non-resampled distributions are approximately the same even in the tail of the distribution. 
+We would expect to see the WE method improving our sampling over low-probability regions of the concentration space. Intuitively, if a bin has been visited by ten traectories, one can be much more certain about the reported value for that bin than if only one trajectory was found there. This improved sampling should manifest itself in a reduced variance in the values of the bins at the tails of the distribution. As Figure~\ref{fig:pdwe-varcloseup} shows, though, the na\"ive estimates of the bin variances are inconsistent with this expectation. Estimated variances for the resampled and non-resampled distributions are approximately the same even in the tail of the distribution. This characteristic is reflected in all the weighted-ensemble datasets presented in this work.
 
 \todo{Show plot of bin populations, mention that statistics \emph{should} be better for WE}
+
+This inconsistency of the variance estimates with expectations could indicate one of two things. First, the na\"ive estimate of bin variance could be failing to capture the improvement in sampling that the WE method offers. This seems unlikely, however, as the variances were estimated in a statistically correct manner. The second possible effect is that the target number $N_T$ of trajectories per bin is not large enough to afford a significant improvement in the variance of low-probability bins. Intuitively, however, one would expect a variance reduction even with the numbers used here ($N_T = 10$ trajectories versus one or two in some non-resampled bins). Perhaps it would be possible to get a better estimate of the variance of a bin by taking into account the number of trajectories, i.e. the number of samples, that were used to find its value.
 
 In any case, none of the comparisons here shows a \emph{systematic} difference between the resampled and non-resampled distributions. Therefore, it can be concluded that WE resampling does not bias our estimate of the probability distribution for the simple production-degradation system.
 
@@ -447,9 +449,43 @@ The procedure used to assess the effect of resampling on the numerical probabili
 
 Second, the total time $T$ that each ensemble was run had to be chosen to avoid any effects due to the initial phase randomization. The value $T = 3\tau$ was deemed a safe choice for this purpose, as trajectories sample their histories only as far as $\tau$ time units earlier. By time $3\tau$, all trajectories would have been sampling active histories (that is, not sampling earlier than their starting times) for at least $\tau$ time units.
 
-\todo{Show comparison for short tau, note agreement}
+\begin{figure}[t]
+    \makebox[\linewidth][c]{
+        \begin{subfigure}{3in}
+            \begin{center}
+                \input{../results/thesis/ddwe-t0,1-a800-cmp-small.pgf}
+            \end{center}
+            \label{sfg:ddwe0-comp}
+        \end{subfigure}
+        \begin{subfigure}{3in}
+            \begin{center}
+                \input{../results/thesis/ddwe-t0,1-a800-devs-small.pgf}
+            \end{center}
+            \label{sfg:ddwe0-chi}
+        \end{subfigure}
+    }
+    \caption{Left: comparison of weighted and non-reweighted ensembles against the analytical distribution for the delayed-degradation system with $A=800$, $B=3$, $C=1$, and $\tau=0.1$ ($T=3$). Right: differences from the analytical distribution, normalized by each estimate's standard deviation.}
+    \label{fig:ddwe0}
+\end{figure}
 
-\todo{Show comparison for larger tau, deviation from analytical, but resampled and non-resampled still agree}
+\begin{figure}[t]
+    \makebox[\linewidth][c]{
+        \begin{subfigure}{3in}
+            \begin{center}
+                \input{../results/thesis/ddwe-t1-a800-cmp-small.pgf}
+            \end{center}
+            \label{sfg:ddwe1-comp}
+        \end{subfigure}
+        \begin{subfigure}{3in}
+            \begin{center}
+                \input{../results/thesis/ddwe-t1-a800-devs-small.pgf}
+            \end{center}
+            \label{sfg:ddwe1-chi}
+        \end{subfigure}
+    }
+    \caption{Left: comparison of weighted and non-reweighted ensembles against the analytical distribution for the delayed-degradation system with $A=800$, $B=3$, $C=1$, and $\tau=1$ ($T=3$), showing deviation from the analytical variance derived for small $\tau$. Right: differences from the analytical distribution, normalized by each estimate's standard deviation.}
+    \label{fig:ddwe1}
+\end{figure}
 
 Based on this data, we can tentatively conclude that weighted-ensemble resampling does not bias our estimate of the steady-state probability distribution of the delayed-degradation system. This is a stronger conclusion than the one for the simple production-degradation system. This data provides strong evidence that, even in the presence of delayed reactions, the WE resampling method does not have a biasing effect. It remains to be seen whether this conclusion holds in general for more complex delayed systems, although this data does provide good reason to be optimistic.
 
@@ -498,7 +534,7 @@ The next step in this project is to model systems that are also realizable exper
 \section{Modeling Crowded Environments} % (fold)
 \label{sub:diffusion-crowded}
 
-The most important assumption underlying the SSA and the chemical master equation is that the chemical system is well-stirred (homogeneous) and behaves like an ideal gas. \todo{Reference, use same one from Section~\ref{sec:chemkin}}. Both of these assumptions can be expected to break down, to some extent, in living cells. First, cells are highly nonhomogeneous environments, with various internal membranes (especially, in eukaryotic cells, the nuclear membrane) hindering the free movement of molecules throughout the cell. Second, the high concentrations of bulky molecules such as proteins would also be expected to slow down the motion of molecules.
+The most important assumption underlying the SSA and the chemical master equation is that the chemical system is well-stirred (homogeneous) and behaves like an ideal gas. \todo{Reference, use same one from Section~\ref{sec:chemkin}}. Both of these assumptions can be expected to break down, to some extent, in living cells. First, cells are highly nonhomogeneous environments, with various internal membranes (especially, in eukaryotic cells, the nuclear membrane) hindering the free movement of molecules throughout the cell. Second, the high concentrations of bulky molecules such as proteins would also be expected to slow down the motion of molecules \todo{Reference}.
 
 There are several possible ways to model these deviations from the ideal-gas assumption. One way would be to add a phenomenological retardation factor that decreases each reaction's propensity in the presence of high concentrations of other molecules. Another way would be to run the SSA on a spatial grid of cells coupled by a diffusion law.
 
@@ -523,7 +559,7 @@ Finally, I would like to thank the authors and contributors of the IPython inter
 
 \chapter{Technical Notes} % (fold)
 \label{sec:tech-notes}
-\todo{Include Python version, along with versions of NumPy, SciPy, Matplotlib, IPython, etc. used}
+\todo{Include Python version, along with versions of NumPy, SciPy, Matplotlib, IPython, etc. used. Maybe specifically call out the pseudorandom number generator used (NumPy's Mersenne twister).}
 
 \todo{How to get code and data}
 % section tech-notes (end)
