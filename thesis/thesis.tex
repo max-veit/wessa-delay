@@ -162,8 +162,6 @@ For a unimolecular reaction, e.g. a reaction $R_j$ taking one molecule of $X_1$ 
 
 For a bimolecular reaction, the propensity is the probability (per unit time) that any pair of reactant molecules will collide within the system volume, multiplied by the probability that such a collision will actually result in a reaction. One could therefore assume the probability per unit time of any pair of molecules reacting is a constant $c_j^{(2)}$, implying the propensity function is proportional to the number of pairs of reactants in the system volume. If the two reactant molecules are of different species $X_1$ and $X_2$, the propensity $a_j^{(2)}(\vec{x}) = c_j^{(2)} \cdot x_1 x_2$. If they are of the same species $X_1$, $a_j^{(2)}(\vec{x}) = c_j^{(2)} \cdot \frac{1}{2}x_1(x_1 - 1)$ (which comes from $c_j^{(2)}\binom{x}{2}$, where $\binom{n}{k}$ denotes the binomial coefficient).
 
-\todo{Discuss higher-order reactions? Gillespie says they don't technically exist, but some theoretical models use them.}
-
 % subsection propensities (end)
 
 \subsection{Delayed Reactions} % (fold)
@@ -183,7 +181,7 @@ In the case where some of the reactions in a system are delayed, Equation~\eqref
 \end{align}
 where $P$ of the $N$ total reactions are delayed and each delay $\delaytime_j$ is assumed to be a single number. The second sum term involves an inner sum over all states $\vec{x}'$ in the state space; the joint probability distribution $\Prob_2(\vec{x}, t;\: \vec{x}', t - \delaytime_j)$ gives the probability of the system visiting state $\vec{x}'$ at time $t - \delaytime_j$ \emph{and} reaching state $\vec{x}$ at time $t$. The inner sum thus covers all possible paths the system could take to reach the current state $\vec{x}$ over the duration of the delay. The multidimensional step function $H(\vec{x})$ is included to block unphysical reactions, i.e. those that take any single concentration below zero (the value of $H(\vec{x})$ is one if all the $x_i$ are positive, zero otherwise). 
 
-Finally, introducing delayed reactions has an important consequence: Since delayed reactions depend on the history of the chemical system, models incorporating them are non-Markovian. This fact severely limits the analytical tools one can apply to analyze the stochastic behavior of systems with delayed reactions. It also has important consequences in the numerical simulation of delayed systems. These consequences are explored in Section~\ref{sub:we-delays}.
+Finally, introducing delayed reactions has an important consequence: Since delayed reactions depend on the history of the chemical system, models incorporating them are non-Markovian. This fact severely limits the analytical tools one can apply to analyze the stochastic behavior of systems with delayed reactions; Section~\ref{sub:delayed-joint-dist} discusses the implications of non-Markovian dynamics for analytical models. It also has important consequences in the numerical simulation of delayed systems. These consequences are explored in Sections~\ref{sub:we-delays}.
 
 % subsection delayed-reactions (end)
 
@@ -435,7 +433,7 @@ One of the simplest possible systems that includes delayed reactions is the dela
 \end{align}
 This is simply the production-degradation system with an additional reaction added; the notation for the third reaction means it is a delayed reaction with propensity constant $C$ (analogous to $B$) and delay $\tau$. As in the simple production-degradation model the parameter $A$ sets the scale of the system, absorbing the system volume $\Omega$.
 
-The additional delayed reaction has a profound effect on the overall behavior of this system. For large enough values of $C$ the system undergoes a Hopf bifurcation and the concentration oscillates periodically between two values (the ``oscillatory mode''). However, for smaller values of $C$ the system behaves much like the simple production-degradation system, fluctuating about a stable mean value (the ``stable mode''). An analytical form for the probability distribution is only available for the stable mode. In the limit of short delay $\tau$, the distribution is \cite{delayed-deg-notes}
+The additional delayed reaction has a profound effect on the overall qualitative behavior of this system. For large enough values of $C$ the system undergoes a Hopf bifurcation and the concentration oscillates periodically between two values (the ``oscillatory mode''). However, for smaller values of $C$ the system behaves much like the simple production-degradation system, fluctuating about a stable mean value (the ``stable mode''). An analytical form for the probability distribution is only available for the stable mode. In the limit of short delay $\tau$, the distribution is \cite{delayed-deg-notes}
 \begin{equation}
     P(\xi) = \sqrt{\frac{B + C}{2\pi(1 + C\tau)}}\exp\left( -\frac{B + C}{2(1 + C\tau)} \xi^2 \right)
     \label{eq:dd-analytic-dist}
@@ -493,16 +491,34 @@ Based on this data, we can tentatively conclude that weighted-ensemble resamplin
 
 \subsection{Delayed Joint Probability Distribution} % (fold)
 \label{sub:delayed-joint-dist}
+The chemical master equation (Equation \eqref{eq:master-eqn-delay}) written for this system takes the form:
+\begin{multline}
+    \frac{\partial}{\partial t} \Prob(n, t) = A(\hat{E}^{-1} - 1) \Prob(n, t) + B n(\hat{E} - 1) \Prob(n, t) + \\
+    \sum_{m=0}^{\infty} H(n) C m (\hat{E} - 1) \Prob_2(n, t; m, t - \tau)
+    \label{eq:master-eqn-dd}
+\end{multline}
+with $\hat{E}$ representing the unit shift operator acting only on $n$, i.e.
+\[
+    \hat{E}{f(n,t;} {m,t-\tau)} = {f(n+1,t;} {m,t-\tau)}.
+\]
 
-A key problem in modeling the delayed-degradation system is to describe the delayed joint probability distribution $P_2(\vec{x}, t; \vec{x}', t - \tau)$ that appears in the delayed master equation (see Equation~\eqref{eq:master-eqn-delay}). In the specific case of the delayed-degradation system, this distribution can be written $P_2(n, t; m, t - \tau)$ in terms of integer populations $n$ and $m$ of the species $X$. One can also average Equation~\eqref{eq:master-eqn-delay} over $n(t)$, in which case the joint distribution turns into a \defkeywd{conditional average}:
+The equation suffers from a closure problem due to the non-Markovian properties of this system. The question is how to model the joint probability distribution $P_2(m,t; n, t - \tau)$. Writing an equation for the time evolution of this distribution only results in a dependence on higher-order distributions. Analytical models of the delayed-degradation system therefore need to model this joint distribution in some other way.
+
+To cast Equation~\eqref{eq:master-eqn-dd} in a slightly more conventient form, one can eliminate the sum over $m$ by replacing the joint probability distribution with the \defkeywd{conditional average}:
 \begin{equation}
     \langle m, t - \tau | n, t \rangle = \frac{\sum_m m P_2(n, t; m, t - \tau)}{\sum_m P_2(n, t; m, t - \tau) }
     \label{eq:cond-avg-def}
 \end{equation}
+The master equation then takes the form \cite{delayed-deg-notes}:
+\begin{multline}
+    \frac{\partial}{\partial t} \Prob(n, t) = A(\hat{E}^{-1} - 1) \Prob(n, t) + B n(\hat{E} - 1) \Prob(n, t) + \\
+    C (\hat{E} - 1) (\langle m, t - \tau | n, t \rangle \Prob(n, t))
+    \label{eq:master-eqn-dd-ca}
+\end{multline}
 
-One method for modeling the delayed joint distribution is used in \cite{delay-oscillations}, where events at time $t$ are assumed to be decorrelated from events at time $t - \tau$. This assumption implies $\langle m, t - \tau | n, t \rangle = \langle m, t - \tau \rangle$ -- in other words, that the conditional average of $m(t - \tau)$ is a constant that does not depend on $n(t)$. While this assumption may hold far away from the bifurcation point (in either direction), it could very well break down close to the bifurcation.
+One method for modeling the delayed joint distribution is used in \cite{delay-oscillations}, a type of mean-field approximation where events at time $t$ are assumed to be decorrelated from events at time $t - \tau$. This assumption implies $\langle m, t - \tau | n, t \rangle = \langle m, t - \tau \rangle$ -- in other words, that the conditional average of $m(t - \tau)$ is a constant that does not depend on $n(t)$. The authors of \cite{delay-oscillations} note that in order for this assumption to hold, the coupling between events at time $t$ and $t - \tau$, which is controlled by the value of $C$, must be relatively small. In other words, it could very well break down close to the bifurcation.
 
-In order to test this assumption, it is possible to compute the delayed joint distribution based on a single trajectory generated by the SSA. Interpreting the sequence $(n_i, t_i)$ as a continuous-time trajectory $n(t)$, the probability $P_2(p, t; q, t - \tau)$ is proportional to the amount of time the system spends in the state $n(t) = p; n(t - \tau) = q$. More formally,
+One way to evaluate the conditions under which this assumption holds is to use numerical simulation, which does not suffer from the closure problem encountered in analytical models. It is possible to compute the delayed joint distribution based on a single trajectory generated by the SSA. Interpreting the sequence $(n_i, t_i)$ as a continuous-time trajectory $n(t)$, the probability $P_2(p, t; q, t - \tau)$ is proportional to the amount of time the system spends in the state $n(t) = p; n(t - \tau) = q$. More formally,
 \begin{equation}
     P_2(p, t; q, t - \tau) = \frac{1}{t_1 - t_0} \int_{t_0}^{t_1} \delta_{p, n(t)} \delta_{q, n(t - \tau)} \dee t
     \label{eq:joint-pdist-calc}
@@ -511,6 +527,15 @@ where $t_0$ is at least $\tau$ time units later than the trajectory's starting t
 
 \todo{describe qualitative behavior of cond'l average (unimodal to bimodal)}
 
+\todo{better introduce prediction for cond'l average near bifurcation}
+
+Another model for the conditional average can be made in the Langevin limit and near the stochastic bifurcation point. In terms of the normalized fluctuation $\xi = \frac{n - n^\star}{\sqrt{A}}$ defined in Section~\ref{sub:dd-we-verif}, the conditional average in ths limit is the linear function \cite{delayed-deg-notes}
+\begin{equation}
+    \langle \xi, t - \tau | \xi \rangle = \left( \frac{\omega \cos(\omega \tau) - B \sin(\omega \tau)}{\omega + C \sin(\omega \tau)}\xi \right)
+    \label{eq:cond-avg-linear}
+\end{equation}
+with the Hopf frequency $\omega = \sqrt{C^2 - B^2}$ (so this equation is only valid for $C > B$).
+
 \begin{figure}[htb]
     \makebox[\linewidth][c]{
         \includegraphics{../results/thesis/ddjd-a100-b3-t20-csweep.png}
@@ -518,11 +543,24 @@ where $t_0$ is at least $\tau$ time units later than the trajectory's starting t
     \caption{Behavior of the delayed-joint distribution as the parameter $C$ is varied. The parameters $A=100$, $B=3$, and $\tau=20$ were kept fixed; each distribution was computed from $T = t_1 - t_0 = 800$ time units of a single SSA trajectory with initial state $x_0 = 0$.}
 \end{figure}
 
-\todo{Show conditional average in stable mode}
+\begin{figure}
+    \begin{center}
+        \includegraphics{../results/thesis/ddjd-ca-a100-c2-t1.png}
+    \end{center}
+    \caption{Conditional average of the delayed-joint distribution with $A=100$, $B=3$, $C=2$, and $\tau=1$ computed from $T=800$ time units of an SSA trajectory, showing approximate independence of the conditional average of $q$ from $p$. The flat magenta line indicates the average value of $q$ over the entire trajectory.}
+\end{figure}
 
-\todo{Show conditional average at bifurcation, compare with Langevin-limit prediction}
-
-\todo{Conditional average above bifurcation, showing saturation}
+\begin{figure}
+    \makebox[\linewidth][c]{
+    \begin{subfigure}{3in}
+        \includegraphics{../results/thesis/ddjd-ca-a400-c5-t1.png}
+    \end{subfigure}
+    \begin{subfigure}{3in}
+        \includegraphics{../results/thesis/ddjd-ca-a100-c5,8-t1.png}
+    \end{subfigure}
+    }
+    \caption{Conditional average of the delayed-joint distribution near the bifurcation, showing a breakdown of the mean-field approximation and saturation for large values of $p$. Left: $A=400$, $B=4.5$, $C=5$, and $\tau=1$. Right: $A=100$, $B=4.5$, $C=5.75$, and $\tau=1$. The straight blue line indicates the prediction of Equation~\eqref{eq:cond-avg-linear}. Each distribution computed from $T=800$ time units of an SSA trajectory.}
+\end{figure}
 
 \begin{figure}
     \begin{center}

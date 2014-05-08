@@ -1,3 +1,4 @@
 # Don't want PNG renderings unless they're for the presentation
 *.png
 !presentation/*.png
+!thesis/*.png
