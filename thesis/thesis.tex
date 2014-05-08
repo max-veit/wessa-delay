@@ -509,13 +509,27 @@ In order to test this assumption, it is possible to compute the delayed joint di
 \end{equation}
 where $t_0$ is at least $\tau$ time units later than the trajectory's starting time; $\delta_{i,j}$ is the Kronecker delta symbol. The conditional average is then straightforward to calculate from Equation~\eqref{eq:cond-avg-def}.
 
-\todo{Figure showing sequence of joint distributions sweeping through bifurcation, describe qualitative behavior (unimodal to bimodal)}
+\todo{describe qualitative behavior of cond'l average (unimodal to bimodal)}
+
+\begin{figure}[htb]
+    \makebox[\linewidth][c]{
+        \includegraphics{../results/thesis/ddjd-a100-b3-t20-csweep.png}
+    }
+    \caption{Behavior of the delayed-joint distribution as the parameter $C$ is varied. The parameters $A=100$, $B=3$, and $\tau=20$ were kept fixed; each distribution was computed from $T = t_1 - t_0 = 800$ time units of a single SSA trajectory with initial state $x_0 = 0$.}
+\end{figure}
 
 \todo{Show conditional average in stable mode}
 
 \todo{Show conditional average at bifurcation, compare with Langevin-limit prediction}
 
 \todo{Conditional average above bifurcation, showing saturation}
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{../results/thesis/ddjd-ca-a100-c5-t20.png}
+    \end{center}
+    \caption{Conditional average of the delayed-joint distribution with $A=100$, $B=3$, $C=5$, and $\tau=20$ computed from $T=800$ time units of an SSA trajectory, showing saturation to a constant value. The flat blue line indicates the average value of $n(t-\tau)$ only over the lower peak.}
+\end{figure}
 
 % subsection delayed-joint-dist (end)
 
