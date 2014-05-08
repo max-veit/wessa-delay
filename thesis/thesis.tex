@@ -1,4 +1,4 @@
-\documentclass[english,letterpaper,12pt]{article}
+\documentclass[english,letterpaper,12pt]{report}
 %\usepackage[margin=1in]{geometry}
 
 % Encoding, fonts, and language (fold)
@@ -90,7 +90,7 @@
 \begin{document}
 \title{Stochastic Simulation of Genetic Regulatory Networks with Delayed Reactions}
 \author{Max Veit}
-\date{5 May 2014}
+\date{9 May 2014}
 
 % ----- General Writing TODO notes ----- %
 % Fill in all references as soon as possible
@@ -108,18 +108,19 @@
 
 \begin{doublespacing}
 
-\section{Introduction} % (fold)
+\chapter{Introduction} % (fold)
 \label{sec:introduction}
 
 %TODO Background references look a little thin - maybe add some more from browsing around?
 Recent research in biological physics~\cite{ecoli-decision} indicates that the behavior and internal workings of a living cell are much more rich and complex than the bare instructions coded into its DNA would suggest. For example, an individual section of DNA can be turned off when a repressor protein binds to the beginning of that section. Such mechanisms provide cells a way to change the expression of their DNA, i.e. to control which proteins are produced from their genes and in what amounts, an ability known as (genetic) transcriptional regulation. This ability allows genetically identical cells to adapt their behavior to different environments or to differentiate into different types of cells as in the development of a multicellular organism. Developing models for the selective expression of genes is key to understanding how cells perform their daily functions and respond to their enviroments.
 
-%TODO Ref on biological circuitry would be helpful
-Another interesting feature of transcriptional regulation is the presence of feedback. Even the simplest cells (such as \textit{E. Coli}, a commonly-studied model organism in biological physics) have hundreds of individually switchable sets of  genes \cite{ecoli-operons}.  This complexity allows genetic switches to interact in interesting and useful ways, forming a genetic regulatory network. An example would be two regions of DNA that each code for proteins that suppress the other region, although much more complex feedback mechanisms are found in real cells as well as synthesized in laboratories. \todo{more examples besides those below?} Such mechanisms have the potential to be harnessed as a form of biological circuitry - computation done with chemical reactions instead of electricity~\cite{bio-circuits}. Researchers have already synthesized basic components, such as oscillators~\cite{synth-osc}. Biological circuitry promises to deliver a level of control over cells that would allow bacteria to be harnessed for producing chemicals or fulfilling other useful roles in the body. Advancement of this field, however, depends on a better understanding of genetic networks and their behavior.
+Another interesting feature of transcriptional regulation is the presence of feedback. Even the simplest cells (such as \textit{E. Coli}, a commonly-studied model organism in biological physics) have hundreds of individually switchable sets of  genes \cite{ecoli-operons}.  This complexity allows genetic switches to interact in interesting and useful ways, forming a genetic regulatory network. An example would be two regions of DNA that each code for proteins that suppress the other region, although much more complex feedback mechanisms are found in real cells as well as synthesized in laboratories. \todo{more examples besides those below?} Such mechanisms have the potential to be harnessed as a form of biological circuitry - computation done with chemical reactions instead of electricity~\cite{bio-circuits}. Researchers have already synthesized basic components, such as oscillators~\cite{synth-osc}. Biological circuitry promises to deliver a level of control over cells that would allow bacteria to be harnessed for producing chemicals, delivering drugs, or even replacing damaged human cells \todo{examples, refs}. Advancement of this field, however, depends on a better understanding of genetic networks and their behavior.
 
-Many diverse strategies have been employed to model genetic regulatory networks~\cite{review-in-numero}\cite{bistable-modeling}\cite{gillespie-ssa}\cite{langevin-limit}. Many such models \todo{examples} approximate genetic regulation as a deterministic process. However, in very small systems (such as cells) where the effects of the finiteness of molecular populations become apparent, thermal fluctuations would be expected in inject a relatively large amount of stochasticity into the process. Recent experiments and theoretical considerations~\cite{ecoli-decision}\cite{stoch-theories}\cite{stoch-single-cell} make it clear that this stochasticity has a major influence on the function of these networks. Accurate models must therefore account for this stochasticity in some systematic way. \todo{Mention something about system size expansion?}
+Many diverse strategies have been employed to model genetic regulatory networks~\cite{review-in-numero}\cite{bistable-modeling}\cite{gillespie-ssa}\cite{langevin-limit}. Many such models \todo{examples} approximate genetic regulation as a deterministic process. However, in very small systems (such as cells) where the effects of the finiteness of molecular populations become apparent, thermal fluctuations would be expected in inject a relatively large amount of stochasticity into the process. Recent experiments and theoretical considerations~\cite{ecoli-decision}\cite{stoch-theories}\cite{stoch-single-cell} make it clear that this stochasticity has a major influence on the function of these networks. In particular, there is a large amount of variation in genetic expression between individual cells in genetically identical colonies.
 
-The method explored in this work is to directly simulate the sequence of chemical reactions occurring in the cell using a Monte Carlo algorithm that naturally accounts for the stochasticity present in small systems. The algorithm is known as the Gillespie stochastic simulation algorithm (SSA) and has seen use before in the context of genetic networks~\cite{we-chemkin}\cite{stoch-sys-bio}. The aim of this work is to extend the SSA to make it more practical for simulating real-world (natural or synthetic) genetic regulatory networks in order to analyze their behavior.
+One way of accounting for this stochasticity is a technique known as system size expansion, which treats the concentrations of chemical species as continuous quantities, without any restriction that they be positive \todo{cite langevin-limit publication, research notes}. However, these models break down in a fundamental way when considering very small numbers of molecules, where the inherent discreteness of molecular concentrations plays an important role. \todo{could mention unstable oscillations in delayed-degradation system...}
+
+The method explored in this work is to directly simulate the sequence of chemical reactions occurring in the cell using a Monte Carlo algorithm that naturally accounts for the stochasticity in discreteness present in small systems. The algorithm is known as the Gillespie stochastic simulation algorithm (SSA) and has seen use before in the context of genetic networks~\cite{we-chemkin}\cite{stoch-sys-bio}. The aim of this work is to extend the SSA to make it more practical for simulating real-world (natural or synthetic) genetic regulatory networks in order to analyze their behavior.
 
 % section Introduction (end)
 
@@ -182,16 +183,16 @@ In the case where some of the reactions in a system are delayed, Equation~\eqref
 \end{align}
 where $P$ of the $N$ total reactions are delayed and each delay $\delaytime_j$ is assumed to be a single number. The second sum term involves an inner sum over all states $\vec{x}'$ in the state space; the joint probability distribution $\Prob_2(\vec{x}, t;\: \vec{x}', t - \delaytime_j)$ gives the probability of the system visiting state $\vec{x}'$ at time $t - \delaytime_j$ \emph{and} reaching state $\vec{x}$ at time $t$. The inner sum thus covers all possible paths the system could take to reach the current state $\vec{x}$ over the duration of the delay. The multidimensional step function $H(\vec{x})$ is included to block unphysical reactions, i.e. those that take any single concentration below zero (the value of $H(\vec{x})$ is one if all the $x_i$ are positive, zero otherwise). 
 
-Finally, introducing delayed reactions has an important consequence: Since delayed reactions depend on the history of the chemical system, models incorporating them are non-Markovian. This fact has important consequences in the simulation of systems with delayed reactions. These consequences are explored in Section~\ref{sub:we-delays}.
+Finally, introducing delayed reactions has an important consequence: Since delayed reactions depend on the history of the chemical system, models incorporating them are non-Markovian. This fact severely limits the analytical tools one can apply to analyze the stochastic behavior of systems with delayed reactions. It also has important consequences in the numerical simulation of delayed systems. These consequences are explored in Section~\ref{sub:we-delays}.
 
 % subsection delayed-reactions (end)
 
 % section chemkin (end)
 
-\section{Methodology} % (fold)
+\chapter{Methodology} % (fold)
 \label{sec:methodology}
 
-\subsection{Gillespie Stochastic Simulation Algorithm} % (fold)
+\section{Gillespie Stochastic Simulation Algorithm} % (fold)
 \label{sub:gillespie-ssa}
 
 One of the most well-known and widely used \todo{find examples} algorithms for simulating stochastic chemical systems is the stochastic simulation algorithm (SSA), which was introduced in 1976 by Daniel Gillespie~\cite{gillespie-1976}. As a Monte Carlo technique, it does not attempt to solve the chemical master equation \eqref{eq:master-eqn} explicitly. Rather, the approach taken by the SSA is to generate a \defkeywd{trajectory}, which is the path $\vec{x}(t)$ that one possible \emph{instance}, or example, of the chemical system might take through the state space given some initial conditions $\vec{x}(t_0) = \vec{x}_0$. Unlike the deterministic trajectories found using RRE, these trajectories are generated probabilistically. In effect, the SSA simulates the time evolution of a single instance of the chemical system with some arbitrary initial conditions.
@@ -218,7 +219,7 @@ The iteration is continued typically until the time $t$ reaches (exceeds) a pred
 
 % subsection gillespie-ssa (end)
 
-\subsection{Extension to Non-Markovian Dynamics} % (fold)
+\section{Extension to Non-Markovian Dynamics} % (fold)
 \label{sub:non-markovian}
 
 The classic SSA was designed only for explicitly Markovian chemical systems. However, one could imagine extending the algorithm to include delayed reactions. One such extension is proposed by \cite{delay-oscillations}. The modified algorithm, upon selecting a delayed reaction in Step~2 (see Section~\ref{sub:gillespie-ssa}), schedules the reaction to fire at a later time (that is, Step~3 is postponed by a time $\tau_a$). \todo{Mention what's wrong with this approach?}
@@ -231,7 +232,7 @@ One solution is to manually impose the constraint $x_i \geq 0\; \forall i$, whic
 
 % subsection non-markovian (end)
 
-\subsection{Weighted-Ensemble Resampling} % (fold)
+\section{Weighted-Ensemble Resampling} % (fold)
 \label{sub:we-resampling-intro}
 
 The most straightforward way to obtain a probability distribution using the SSA is to run an ensemble of trajectories in parallel, then estimate the probability density $P(\vec{x}, t | \vec{x}_0, t_0)$ from those samples\footnote{If the probability distribution is known to be steady-state, i.e. independent of time, then one can simply average a single trajectory over a long period of time to obtain $P(\vec{x})$. However, in systems where time-independence is not known \textit{a priori}, the ensemble method must be used.}.
@@ -256,7 +257,7 @@ In this work, I adopt a binning strategy that spaces bin boundaries uniformly ov
 
 % subsection we-resampling-intro (end)
 
-\subsection{Weighted-Ensemble SSA} % (fold)
+\section{Weighted-Ensemble SSA} % (fold)
 \label{sub:wessa}
 
 Some important conceptual issues arise when applying the weighted-ensemble method to chemical-kinetics trajectories evolved using the SSA. The WE method is only guaranteed to be statistically exact if the resampling step occurs at the same time for all the trajectories in the ensemble. However, the SSA chooses non-uniform timesteps, so it would seem impossible to ``pause'' all the trajectories at the same time $t_\text{sync}$. 
@@ -277,7 +278,7 @@ Therefore, it is valid to pause a Markovian trajectory at an arbitrary time $t_\
 
 % subsection wessa (end)
 
-\subsection{Weighted Ensemble With Delays} % (fold)
+\section{Weighted Ensemble With Delays} % (fold)
 \label{sub:we-delays}
 
 In systems with non-Markovian dynamics, i.e. delayed reactions, a different resolution is necessary in order to be able to apply the weighted-ensemble method. Since the propensities for delayed reactions depend on a trajectory's history, they can change in between reactions. The distribution of waiting times for a given reaction is thus no longer memoryless.
@@ -289,6 +290,9 @@ However, it is still an open question whether it is correct to pause an SSA traj
 % subsection we-delays (end)
 
 % section Methodology (end)
+
+\chapter{Results} % (fold)
+\label{chp:results}
 
 \section{Simple Production-Degradation System} % (fold)
 \label{sec:simple-pd}
@@ -319,39 +323,97 @@ Alternatively, since the fluctuations in the population are expected to scale as
 \subsection{Weighted-Ensemble Verification} % (fold)
 \label{sub:pd-we-verif}
 
+\begin{figure}[t]
+    % The "big" version
+    %\begin{subfigure}{\textwidth}
+        %\begin{center}
+            %\input{../results/thesis/pdwe-a400-cmp.pgf}
+        %\end{center}
+        %\label{sfg:pdwe1-comp}
+    %\end{subfigure}
+    %\begin{subfigure}{\textwidth}
+        %\begin{center}
+            %\input{../results/thesis/pdwe-a400-devs.pgf}
+        %\end{center}
+        %\label{sfg:pdwe1-chi}
+    %\end{subfigure}
+    % More compact one-liner version
+    \makebox[\linewidth][c]{
+        \begin{subfigure}{3in}
+            \begin{center}
+                \input{../results/thesis/pdwe-a400-cmp-small.pgf}
+            \end{center}
+            \label{sfg:pdwe4-comp}
+        \end{subfigure}
+        \begin{subfigure}{3in}
+            \begin{center}
+                \input{../results/thesis/pdwe-a400-devs-small.pgf}
+            \end{center}
+            \label{sfg:pdwe4-chi}
+        \end{subfigure}
+    }
+    \caption{Left: comparison of the weighted-ensemble method with a straight non-reweighted ensemble on the simple production-degradation system with $A=400$ and $B=3$. The probability distributions were taken after $T=60$ (arbitrary) time units. Right: differences from the analytical distribution, normalized by each estimate's standard deviation.}
+    \label{fig:pdwe4}
+\end{figure}
+
 The system was simulated using the weighted-ensemble method with individual trajectories evolved using the unmodified SSA. The ensemble was evolved in a sequence of steps of duration $\tau_p$ up to a total time $T$. At the end of the run, the probability distribution was estimated as the sum of weights within each bin. As described in Section~\ref{sub:we-resampling-intro}, the division of the state space into a number $N_b$ of bins was done uniformly over the coordinate $n$. The boundaries of the bins were linearly spaced between values $n_\text{min}$ and $n_\text{max}$. Any trajectories with states outside this range were placed in the nearest in-bounds bin. The initial trajectories used to seed the WE method were assigned random initial states chosen from the uniform distribution on $[n_\text{min}, n_\text{max}]$.
 
 Resampling was done at the beginning of each step, ensuring each bin had the target number of trajectories $N_T$. Note that it is not possible to increase the number of trajectories in empty bins. By resampling often enough (choosing $\tau_p$ sufficiently small) and using a large enough target number $N_T$, one can be reasonably certain that no bins will become empty within the concentration range one is interested in. Unless otherwise noted, the parameters used were $\tau_p = 0.01$ and $N_T = 10$; each ensemble was inspected at the end of the run to make sure all relevant bins were populated. The total time $T$ was chosen so that the samples would have equilibriated to the steady-state distribution by then. This equilibriation time was determined by inspecting the sequence of distributions generated by a sample run of the WE simulation.
 
-For comparison, a similar simulation was done with the resampling turned off at each step; this is equivalent to running all the initial trajectories in parallel up until the time $T$. The probability distribution was estimated simply as the number of trajectories within each bin (normalized by the total number of trajectories). 
+For comparison, a similar simulation was done with the resampling turned off at each step; this is equivalent to running all the initial trajectories in parallel up until the time $T$. The number of trajectories used was equal to the number of bins multiplied by the target number $N_T$. The probability distribution was estimated simply as the number of trajectories within each bin (normalized by the total number of trajectories). 
 
-In order to compare the two distributions in a statistically meaningful way, it is necessary to estimate the uncertainty of the value of any given bin. A na\"{i}ve estimate can be obtained by running many separate ensembles with the same parameters, then taking the standard error $s_i$ of the values for a given bin $i$ across all the resulting distributions. Reported here is the mean value of each bin across $N_\text{ens}$ independent ensembles, with the standard error on that mean estimated by $\frac{s_i}{\sqrt{N_\text{ens}}}$.
+A comparison between the resampled and non-resampled distributions with a reasonably large system volume is shown in Figure~\ref{fig:pdwe4}. 
 
-\todo{Mention intuitive problems with this error estimate; explain that WE should give lower variance}
-
-\todo{Comparison with analytical distribution for large $A$}
-
-\todo{Comparison with analytical distribution for smaller $A$, showing effects of discreteness}
-
-\begin{figure}[hp]
-    \begin{center}
-        \begin{subfigure}{\textwidth}
-            %\input{../results/gaussian-verification-sdm.pgf}
-            \label{sfg:gaussvf-comparison}
+\begin{figure}[t]
+    % The "big" version
+    %\begin{subfigure}{\textwidth}
+        %\begin{center}
+            %\input{../results/thesis/pdwe-a400-cmp.pgf}
+        %\end{center}
+        %\label{sfg:pdwe1-comp}
+    %\end{subfigure}
+    %\begin{subfigure}{\textwidth}
+        %\begin{center}
+            %\input{../results/thesis/pdwe-a400-devs.pgf}
+        %\end{center}
+        %\label{sfg:pdwe1-chi}
+    %\end{subfigure}
+    % More compact one-liner version
+    \makebox[\linewidth][c]{
+        \begin{subfigure}{3in}
+            \begin{center}
+                \input{../results/thesis/pdwe-a100-cmp-small.pgf}
+            \end{center}
+            \label{sfg:pdwe1-comp}
         \end{subfigure}
-
-        \begin{subfigure}{\textwidth}
-            %\input{../results/prod_deg_chi.pgf}
-            \label{sfg:gaussvf-chi}
+        \begin{subfigure}{3in}
+            \begin{center}
+                \input{../results/thesis/pdwe-a100-devs-small.pgf}
+            \end{center}
+            \label{sfg:pdwe1-chi}
         \end{subfigure}
-    \end{center}
-    \caption{Top: comparison of the weighted-ensemble method with a straight non-reweighted ensemble on the simple production-degradation system. Bottom: differences from the analytical distribution, normalized by each histogram's standard deviation.}
-    \label{fig:gaussian-verification}
+    }
+    \caption{Left: comparison of weighted and non-reweighted ensembles against the analytical distribution for the simple production-degradation system with $A=100$ and $B=3$ ($T=60$), showing discreteness effects. The discrete minimum $n=0$ corresponds to $\xi \approx -3.3$. Right: differences from the analytical distribution, normalized by each estimate's standard deviation.}
+    \label{fig:pdwe1}
 \end{figure}
 
-Therefore, it can be concluded that WE resampling does not bias our estimate of the probability distribution for the simple production-degradation system.
+In order to compare the two distributions in a statistically meaningful way, it is useful to estimate the uncertainty of the value of any given bin. A na\"{i}ve estimate can be obtained by running many separate ensembles with the same parameters, then taking the standard error $s_i$ of the values for a given bin $i$ across all the resulting distributions. Reported here is the mean value of each bin across $N_\text{ens}$ independent ensembles, with the standard error on that mean estimated by $\frac{s_i}{\sqrt{N_\text{ens}}}$. The number of ensembles used was $N_\text{ens} = 40$ for all the results presented here.
 
-Ultimately, however, this conclusion is mostly redundant. This system has no delayed reactions, so it is Markovian. As discussed in Section~\ref{sub:wessa}, WE resampling is guaranteed to be correct for Markovian systems. For the purposes of verifying the WE method, it is more interesting to study systems that incorporate delayed reactions.
+\begin{figure}[ht]
+    \begin{center}
+        \input{../results/thesis/pdwe-a400-varcloseup.pgf}
+    \end{center}
+    \caption{Close-up of the probability distribution estimates of Figure~\ref{fig:pdwe4}, showing the variances in a low-probability area of the concentration space.}
+    \label{fig:pdwe-varcloseup}
+\end{figure}
+
+We would expect to see the weighted ensemble method improving our sampling over low-probability regions of the concentration space. Intuitively, if a bin has been visited by 10 trajectories, one can be much more certain about the reported value for that bin than if only one trajectory was found there. This improved sampling should manifest itself in a reduced variance in the values of the bins at the tails of the distribution. As Figure~\ref{fig:pdwe-varcloseup} shows, though, the na\"ive estimates of the bin variances are inconsistent with this expectation. Estimated variances for the resampled and non-resampled distributions are approximately the same even in the tail of the distribution. 
+
+\todo{Show plot of bin populations, mention that statistics \emph{should} be better for WE}
+
+In any case, none of the comparisons here shows a \emph{systematic} difference between the resampled and non-resampled distributions. Therefore, it can be concluded that WE resampling does not bias our estimate of the probability distribution for the simple production-degradation system.
+
+This conclusion is exactly what one would expect, as this system has no delayed reactions and is therefore Markovian. As discussed in Section~\ref{sub:wessa}, WE resampling is guaranteed to be correct for Markovian systems. For the purposes of verifying the WE method, it is more interesting to study systems that incorporate delayed reactions.
 
 % subsection pd-we-verif (end)
 
@@ -360,7 +422,7 @@ Ultimately, however, this conclusion is mostly redundant. This system has no del
 \section{Delayed-Degradation System} % (fold)
 \label{sec:delayed-deg}
 
-One of the simplest possible systems including delayed reactions is the delayed-degradation model, defined by the reactions:
+One of the simplest possible systems that includes delayed reactions is the delayed-degradation model, defined by the reactions:
 \begin{align}
     \begin{gathered}
         \varnothing \xrightarrow{A} X \\
@@ -371,12 +433,12 @@ One of the simplest possible systems including delayed reactions is the delayed-
 \end{align}
 This is simply the production-degradation system with an additional reaction added; the notation for the third reaction means it is a delayed reaction with propensity constant $C$ (analogous to $B$) and delay $\tau$. As in the simple production-degradation model the parameter $A$ sets the scale of the system, absorbing the system volume $\Omega$.
 
-The additional delayed reaction has a profound effect on the overall behavior of this system. For large enough values of $C$ the system undergoes a bifurcation and the concentration oscillates periodically between two values (the ``oscillatory mode''). However, for smaller values of $C$ the system behaves much like the simple production-degradation system, fluctuating about some stable mean value (the ``stable mode''). An analytical form for the probability distribution is only available for the stable mode. In the limit of short delay $\tau$, the distribution is \todo{Reference?}
+The additional delayed reaction has a profound effect on the overall behavior of this system. For large enough values of $C$ the system undergoes a Hopf bifurcation and the concentration oscillates periodically between two values (the ``oscillatory mode''). However, for smaller values of $C$ the system behaves much like the simple production-degradation system, fluctuating about a stable mean value (the ``stable mode''). An analytical form for the probability distribution is only available for the stable mode. In the limit of short delay $\tau$, the distribution is \cite{delayed-deg-notes}
 \begin{equation}
     P(\xi) = \sqrt{\frac{B + C}{2\pi(1 + C\tau)}}\exp\left( -\frac{B + C}{2(1 + C\tau)} \xi^2 \right)
     \label{eq:dd-analytic-dist}
 \end{equation}
-where $\xi$ is defined as in Section~\ref{sec:simple-pd}, only here the steady-state mean population is $n^\star = \frac{A}{B + C}$. The delay acts to broaden the distribution compared to the non-delayed case.
+where $\xi$ is defined as in Section~\ref{sec:simple-pd}, only here the steady-state mean population is $n^\star = \frac{A}{B + C}$. The effect of the delay is to broaden the distribution compared to the simple production-degradation system.
 
 \subsection{Weighted-Ensemble Verification} % (fold)
 \label{sub:dd-we-verif}
@@ -423,7 +485,7 @@ where $t_0$ is at least $\tau$ time units later than the trajectory's starting t
 
 % section delayed-deg (end)
 
-\section{Conclusions and Future Work} % (fold)
+\chapter{Conclusions and Future Work} % (fold)
 \label{sec:conclusions}
 
 The weighted-ensemble stochastic simulation algorithm is a useful tool for studying genetic networks with delays. The SSA explicitly treats the discreteness and stochasticity that become significant in small systems, allowing them to be described in a statistically exact manner. In addition, it is straightforward to extend the SSA to include delayed reactions. The WE resampling method ensures that the system's state space is sampled evenly, enabling the efficient simulation of realistic, complex genetic networks. Results from this work inidicate that the resampling maintains statistical accuracy, i.e. it does not bias the measured distribution, even in systems containing delayed reactions.
@@ -433,7 +495,7 @@ An important application of numerical simulation is to assess approximations or 
 % Future Work
 The next step in this project is to model systems that are also realizable experimentally. A comparison between numerical predictions and experimental results would serve as an excellent check on the validity of the assumptions underlying the application of the SSA to genetic networks.
 
-\subsection{Modeling Crowded Environments} % (fold)
+\section{Modeling Crowded Environments} % (fold)
 \label{sub:diffusion-crowded}
 
 The most important assumption underlying the SSA and the chemical master equation is that the chemical system is well-stirred (homogeneous) and behaves like an ideal gas. \todo{Reference, use same one from Section~\ref{sec:chemkin}}. Both of these assumptions can be expected to break down, to some extent, in living cells. First, cells are highly nonhomogeneous environments, with various internal membranes (especially, in eukaryotic cells, the nuclear membrane) hindering the free movement of molecules throughout the cell. Second, the high concentrations of bulky molecules such as proteins would also be expected to slow down the motion of molecules.
@@ -446,9 +508,27 @@ Although it may seem improper to model a complex cellular environment as a simpl
 
 % section conclusions (end)
 
-\end{doublespacing}
+% chapter results (end)
 
 \appendix
+
+\chapter{Acknowledgments} % (fold)
+\label{sec:acknowledgements}
+\todo{Needs to go before abstract}
+
+I would like to thank my advisor, Professor Jorge Viñals, for his helpful guidance throughout this project and for his critical assessments of my computational approaches and algorithms. I also thank Professor Vincent Noireaux and Professor Yiannis Kaznessis for reviewing this thesis.
+
+Finally, I would like to thank the authors and contributors of the IPython interactive scientific computing system~\cite{PER-GRA:2007} (and related projects), which has been extremely useful in developing and testing my code and in exploring, visualizing and interpreting the resulting data.
+% section acknowledgements (end)
+
+\chapter{Technical Notes} % (fold)
+\label{sec:tech-notes}
+\todo{Include Python version, along with versions of NumPy, SciPy, Matplotlib, IPython, etc. used}
+
+\todo{How to get code and data}
+% section tech-notes (end)
+
+\end{doublespacing}
 
 \bibliographystyle{apsrev}
 \bibliography{citations.bib}
