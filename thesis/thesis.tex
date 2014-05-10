@@ -57,7 +57,7 @@
 
 % Convenience / typographical consistency
 \newcommand{\defkeywd}[1]{\textbf{#1}}
-\usepackage[enable]{easy-todo}
+\usepackage[disable]{easy-todo}
 % Deprecated - don't play nice with latex-suite autocomplete
 \newcommand{\figref}[1]{Figure~\ref{#1}}
 \newcommand{\secref}[1]{Section~\ref{#1}}
@@ -226,7 +226,7 @@ To account for this duration, we can associate a \defkeywd{delay} with the react
 
 In the case where some of the reactions in a system are delayed, we can modify Equation~\eqref{eq:master-eqn} to:
 \begin{align}
-    \frac{\partial}{\partial t} \Prob(\vec{x}, t) &= \sum_{j=P+1}^N a_j(\vec{x})(\hat{T}^{-\vec{s}_j} - 1)\Prob(\vec{x}, t) \\
+    \frac{\partial}{\partial t} \Prob(\vec{x}, t) &= \sum_{j=P+1}^N a_j(\vec{x})(\hat{T}^{-\vec{s}_j} - 1)\Prob(\vec{x}, t) \nonumber\\
                                                   &+ \sum_{j=1}^P \sum_{\vec{x}'} H(\vec{x}) a_j(\vec{x}') (\hat{T}^{-\vec{s}_j} - 1) \Prob_2(\vec{x}, t;\: \vec{x}', t - \delaytime_j)
     \label{eq:master-eqn-delay}
 \end{align}
@@ -273,7 +273,7 @@ The forms of the probability distributions in Step~2 derive in a straightforward
 
 The classic SSA was designed only for explicitly Markovian chemical systems. However, one could imagine extending the algorithm to include delayed reactions. One such extension is proposed by \cite{delay-oscillations}. The modified algorithm, upon selecting a delayed reaction in Step~2 (see Section~\ref{sub:gillespie-ssa}), schedules the reaction to fire at a later time (that is, Step~3 is postponed by a time $\tau_a$).
 
-In this work, a method that more closely follows the analytical modeling of delayed reactions via Equation~\eqref{eq:master-eqn-delay} is chosen. The SSA is modified in the propensity calculation of Step~1: To calculate the propensity of a reaction $R_j$ with delay $\delaytime_j$, we simply use the state from $\delaytime_j$ time units earlier\footnote{If $t - \tau_j$ is less than the trajectory's starting time $t_0$, we just use the initial state $\vec{x}_0$ to compute the propensity. This special case is only relevant for the first $(\max_j \tau_j)$ time units of the simulation, after which we sample the history normally.}. Thus, with a trajectory at time $t$, the propensity would be computed as $a_j = a_j\left(\vec{x}(t - \delaytime_j)\right)$. This method is consistent with the delayed-reaction formulation of the master equation, Equation~\eqref{eq:master-eqn-delay}. Note that 
+In this work, a method that more closely follows the analytical modeling of delayed reactions is chosen. The SSA is modified in the propensity calculation of Step~1: To calculate the propensity of a reaction $R_j$ with delay $\delaytime_j$, we simply use the state from $\delaytime_j$ time units earlier\footnote{If $t - \tau_j$ is less than the trajectory's starting time $t_0$, we just use the initial state $\vec{x}_0$ to compute the propensity. This special case is only relevant for the first $(\max_j \tau_j)$ time units of the simulation, after which we sample the history normally.}. Thus, with a trajectory at time $t$, the propensity would be computed as $a_j = a_j\left(\vec{x}(t - \delaytime_j)\right)$. This method is consistent with the delayed-reaction formulation of the master equation, Equation~\eqref{eq:master-eqn-delay}.
 
 One undesirable feature is introduced by including delayed reactions using either method: Since the delayed reactions lag behind the current state, it is possible for individual concentrations to go below zero, an obviously unphysical result. In the non-delayed SSA, any reaction that could decrease the concentration $x_i$ has a propensity proportional to that concentration (to some power). Therefore, when $x_i$ goes to zero, any reaction that could decrease $x_i$ has a zero propensity and is blocked from running. A delayed reaction, however, does not ``notice'' zero concentrations in real time so it is not blocked in time to avoid decreasing concentrations from zero\footnote{Some analytical models of delayed systems have this problem owing to the difficulty of analytically constraining concentrations to be nonnegative. The result is often nonsensical behavior, such as oscillations with exponentially increasing amplitude.}.
 
@@ -288,7 +288,7 @@ The most straightforward way to obtain a probability distribution using the SSA 
 
 The main issue with this method is that it generally samples state space unevenly. Trajectories in the ensemble tend to congregate, by construction, in the most probable regions of state space while less probable regions (the ``tails'' of the distribution) are more rarely visited. The result is that the accuracy of the sample of the probability distribution obtained using this simple ensemble increases with the probability density at the same location. This effect makes this method extremely inefficient if one is most interested in the least probable regions, as is the case in many problems in chemistry and biology (e.g. computing transition rates). In many cases, one would need to use a prohibitively large number of trajectories to adequately sample the improbable transition regions.
 
-To overcome this problem, we can apply a method known (in the context of molecular dynamics and stochastic simulation) as the \defkeywd{weighted ensemble} (WE) method~\cite{we-orig}, a type of importance sampling. Its straightforward implementation, statistically exact properties, and its generality and applicability to high-dimensional concentration spaces~\cite{we-exact}\cite{we-chemkin} make it ideal for this work.
+To overcome this problem, we can apply a method known (in the context of molecular dynamics and stochastic simulation) as the \defkeywd{weighted ensemble} (WE) method~\cite{we-orig}, a type of importance sampling. Its straightforward implementation, statistically exact properties, and generality and applicability to high-dimensional concentration spaces~\cite{we-exact}\cite{we-chemkin} make it ideal for this work.
 
 The basic strategy of the WE method is to periodically redistribute the samples in a way that does not change our estimate of the probability distribution $P(\vec{x}, t | \vec{x}_0, t_0)$. This is achieved by assigning each trajectory a \defkeywd{weight} $w_k$ such that the sum of all weights is always 1. In effect, the method biases the underlying distribution so that rare events are sampled as frequently as the common ones, while keeping track of weights in order to obtain a sample of the original, \emph{unbiased} probability distribution.
 
@@ -297,7 +297,7 @@ The WE method has been applied to stochastic chemical kinetics before. The imple
     \item Perform a resampling step to equalize the distribution of trajectories over state space.
     \item Run all the trajectories independently for a time $\tau_p$.
 \end{enumerate}
-Step~1 is usually referred to as the \defkeywd{resampling step} and Step~2 as the \defkeywd{dynamics step}. In this case, running a trajectory means applying the SSA to evolve the trajectory forward in time. However, the generality of the WE method permits the use of other time evolution algorithms for the second step. In the more commonly encountered applications of the WE method, a molecular dynamics algorithm is used to evolve independent trajectories through phase space.
+Step~1 is usually referred to as the \defkeywd{resampling step} and Step~2 as the \defkeywd{dynamics step}. In this case, running a trajectory means applying the SSA to evolve the trajectory forward in time. However, the generality of the WE method permits the use of other time evolution algorithms for the dynamics step. In the more commonly encountered applications of the WE method, a molecular dynamics algorithm is used to evolve independent trajectories through phase space.
 
 The resampling step is implemented by partitioning the state space into discrete \defkeywd{bins}. To equalize the distribution of trajectories over state space, we can use two basic operations: To increase the number of trajectories in a bin, we can replicate a trajectory $T_a$ to obtain $M$ copies. Each of the copies receives a weight $w_a/M$; in this way, the total weight within a bin is conserved. To decrease the number of trajectories,  we can a delete a trajectory $T_b$ (typically the one with the lowest weight) and assign its weight to another trajectory $T_c$ in the same bin, i.e. $T_c$ receives a new weight $w_b + w_c$. Again, the operation conserves the total weight within each bin. This conservation of weight is the key feature that ensures the statistical correctness of the resampling method.
 
@@ -308,7 +308,7 @@ In this work, a uniform binning strategy is adopted, i.e. the bin boundaries are
 \section{Weighted-Ensemble SSA} % (fold)
 \label{sub:wessa}
 
-Some important conceptual issues arise when applying the weighted-ensemble method to chemical-kinetics trajectories evolved using the SSA. The WE method is only guaranteed to be statistically exact if the resampling step occurs at the same time for all the trajectories in the ensemble. However, the SSA chooses non-uniform timesteps, so it would seem impossible to ``pause'' all the trajectories at the same time $t_\text{sync}$. 
+Some important conceptual issues arise when applying the weighted-ensemble method to chemical-kinetics trajectories evolved using the SSA. The WE method is only guaranteed to be statistically exact if the resampling step occurs at the same time for all the trajectories in the ensemble \cite{we-exact}. However, the SSA chooses non-uniform timesteps, so it would seem impossible to ``pause'' all the trajectories at the same time $t_\text{sync}$. 
 
 Figure~\ref{fig:wessa-pause} illustrates the problem. The SSA only generates a discrete set of steps $(\vec{x}_n, t_n)$. Thus, the closest one can to come to pausing a trajectory at $t_\text{sync}$ is to stop each trajectory once it chooses a reaction time that is after $t_\text{sync}$, but before the trajectory actually updates its state. However, this procedure results in an ensemble of trajectories each effectively at different times, which means that it may not be correct to apply resampling to this ensemble.
 
@@ -331,9 +331,9 @@ Therefore, it is valid to pause a Markovian trajectory at an arbitrary time $t_\
 
 In systems with non-Markovian dynamics, i.e. delayed reactions, a different resolution is necessary in order to be able to apply the weighted-ensemble method. Since the propensities for delayed reactions depend on a trajectory's history, they can change in between reactions. The distribution of waiting times for a given reaction is thus no longer memoryless.
 
-To circumvent this problem, this work uses the following implementation of trajectory pausing: If a trajectory is to be paused at a time $t$, it executes the SSA until a reaction is generated that would fire later than $t$. Instead of executing that reaction, the trajectory saves it and becomes paused. Upon resuming, the trajectory recalls and executes the saved reaction and continues the SSA from the time of that reaction.
+To circumvent this problem, the following implementation of trajectory pausing is used in this work: If a trajectory is to be paused at a time $t$, it executes the SSA until a reaction is generated that would fire later than $t$. Instead of executing that reaction, the trajectory saves it and becomes paused. Upon resuming, the trajectory recalls and executes the saved reaction and continues the SSA from the time of that reaction.
 
-However, it is still an open question whether it is correct to pause an SSA trajectory in between reactions. The more fundamental question is whether it is valid to interpret the discrete sequence $(\vec{x}_n, t_n)$ generated by the SSA as a continuous-time trajectory. This question is not easy to address on a mathematically rigorous level. However, numerical evidence from systems with analytical descriptions indicates that WE resampling does not bias the numerical estimate of the probability distribution. This conclusion holds on systems that include delayed reactions.
+However, it is still an open question whether it is correct to pause an SSA trajectory in between reactions. The more fundamental question is whether it is valid to interpret the discrete sequence $(\vec{x}_n, t_n)$ generated by the SSA as a continuous-time trajectory. This question is not easy to address on a mathematically rigorous level. However, numerical evidence from systems with analytical descriptions indicates that WE resampling does not bias the numerical estimate of the probability distribution. This conclusion holds for systems that include delayed reactions.
 
 % subsection we-delays (end)
 
@@ -364,7 +364,7 @@ The deterministic RRE method predicts an equilibrium population of $n^\star = \f
 
 Alternatively, since the fluctuations in the population are expected to scale as $\sqrt{A}$, it makes sense to define the normalized fluctuation $\xi = A^{-1/2}(n - n^\star)$. In terms of $\xi$, the steady-state probability distribution is then
 \begin{equation}
-    \Prob(\xi) = \sqrt{\frac{B}{2\pi}} \exp(-B \xi^2)
+    \Prob(\xi) = \sqrt{\frac{B}{2\pi}} \exp\left(-\frac{B \xi^2}{2}\right)
     \label{eq:pd-dist-xi}
 \end{equation}
 
@@ -405,6 +405,8 @@ Alternatively, since the fluctuations in the population are expected to scale as
 \end{figure}
 
 The system was simulated using the weighted-ensemble method with individual trajectories evolved using the unmodified SSA. The ensemble was evolved in a sequence of dynamics steps of duration $\tau_p$ up to a total time $T$. At the end of the run, the probability distribution was estimated as the sum of weights within each bin. As described in Section~\ref{sub:we-resampling-intro}, the division of the state space into a number $N_b$ of bins was done uniformly over the coordinate $n$. The boundaries of the bins were linearly spaced between values $n_\text{min}$ and $n_\text{max}$. Any trajectories with states outside this range were placed in the nearest in-bounds bin. The initial trajectories used to seed the WE method were assigned random initial states chosen from the uniform distribution on $[n_\text{min}, n_\text{max}]$.
+
+For all weighted-ensemble runs shown in this work, $N_b = 30$ bins were used and the range $[n_\text{min}, n_\text{max}]$ was chosen to encompass about four standard deviations of the distribution in either direction.
 
 \begin{figure}[t]
     \makebox[\linewidth][c]{
@@ -650,7 +652,7 @@ Closer to the bifurcation, however, this approximation completely breaks down. F
     \label{fig:ddjd-bif}
 \end{figure}
 
-Another model for the conditional average can be made in the Langevin limit and near the stochastic bifurcation point. In terms of the normalized fluctuation $\xi = \frac{n - n^\star}{\sqrt{A}}$ defined in Section~\ref{sub:dd-we-verif}, the conditional average in ths limit is the linear function \cite{delayed-deg-notes}
+Another model for the conditional average can be made in the Langevin limit and near the stochastic bifurcation point. In terms of the normalized fluctuation $\xi = \frac{n - n^\star}{\sqrt{A}}$ defined in Section~\ref{sub:dd-we-verif}, the conditional average in this limit is the linear function \cite{delayed-deg-notes}
 \begin{equation}
     \langle \xi_\tau, t - \tau | \xi, t \rangle = \left( \frac{\omega \cos(\omega \tau) - B \sin(\omega \tau)}{\omega + C \sin(\omega \tau)}\right)\xi 
     \label{eq:cond-avg-linear}
@@ -692,7 +694,7 @@ The most important assumption underlying the SSA and the chemical master equatio
 
 There are several possible ways to model these deviations from the ideal-gas assumption. One way would be to add a phenomenological retardation factor that decreases each reaction's propensity in the presence of high concentrations of other molecules. Another way would be to run the SSA on a spatial grid of cells coupled by a diffusion law.
 
-Although it may seem improper to model a complex cellular environment as a simple ideal gas, this method still seems to be the dominant one for modeling genetic regulatory networks. Comparison with experimental data should be the most useful guide in determining whether the ideal-gas assumption is in fact justified or whether one of the above strategies needs to be applied to realistically model genetic networks in cells.
+Although it may intuitively seem improper to model a complex cellular environment as a simple ideal gas, this method still seems to be the dominant one for modeling genetic regulatory networks. Comparison with experimental data should be the most useful guide in determining whether the ideal-gas assumption is in fact justified or whether one of the above strategies needs to be applied to realistically model genetic networks in cells.
 
 % subsection diffusion-crowded (end)
 
