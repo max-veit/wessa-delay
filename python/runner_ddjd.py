@@ -93,9 +93,12 @@ def jdist_sweep(rxn_params, sweep_params, pdist_params):
     along the third.
 
     """
-    C_range = np.linspace(sweep_params['C_min'],
-                          sweep_params['C_max'],
-                          sweep_params['npoints'])
+    if sweep_params.get('use_linspace', True):
+        C_range = np.linspace(sweep_params['C_min'],
+                              sweep_params['C_max'],
+                              sweep_params['npoints'])
+    else:
+        C_range = np.array(sweep_params['C_range'])
     rxns_sweep = dict(rxn_params)
     nbins = pdist_params['nbins']
     paving = we.UniformPaving(*pdist_params['binrange'], bin_counts=nbins)
