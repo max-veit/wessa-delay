@@ -102,7 +102,7 @@ def jdist_sweep(rxn_params, sweep_params, pdist_params):
     rxns_sweep = dict(rxn_params)
     nbins = pdist_params['nbins']
     paving = we.UniformPaving(*pdist_params['binrange'], bin_counts=nbins)
-    pdists = np.empty((sweep_params['npoints'], nbins, nbins))
+    pdists = np.empty((len(C_range), nbins, nbins))
     for swidx, C_val in enumerate(C_range):
         rxns_sweep['k_delayed'] = C_val
         rxns = setup_reactions(rxns_sweep)
