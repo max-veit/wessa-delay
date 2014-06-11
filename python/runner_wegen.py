@@ -154,7 +154,8 @@ def run_ensembles(rxns, ens_params):
                           ens_params['bin_pop_range'],
                           init_trjs)
         tot_time = ens.run_time(ens_params['tot_time'],
-                                prune_itval=prune_itval)
+                                prune_itval=prune_itval,
+                                resample=ens_params['resample'])
         tot_times[ens_idx] = tot_time
         pdist = ens.get_pdist()
         prob_dists[ens_idx, ...] = pdist
