@@ -1,4 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
+#
+# Copyright © 2014 Max Veit.
+#
+# This file is part of Max Veit's undergraduate thesis research code.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
 Usage: runner_ddjd.py param_fname [-o out_fname] [-c]
 
@@ -10,6 +28,11 @@ The parameter 'param_fname' specifies the filename from which to read
 the reaction and parameters, 'out_fname' specifies the name of the file
 to which to write results (as a NumPy zipped array collection). If '-c'
 is specified, the file will be overwritten (clobbered) if it exists.
+
+If no output filename is specified, the output will be written to the
+file '<basename>.npz' in the directory 'output', which is assumed to
+exist in the current directory. The '<basename>' is the base of the
+name of the parameter file (i.e. with the '.json' extension stripped).
 
 """
 

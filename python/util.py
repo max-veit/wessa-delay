@@ -1,8 +1,26 @@
 #!/usr/bin/python
-"""
-A general collection of utilities useful for the thesis project.
+#
+# Copyright © 2014 Max Veit.
+#
+# This file is part of Max Veit's undergraduate thesis research code.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Contains mostly utilities for manipulating the output of the
+"""
+Some utilities for the thesis project.
+
+Currently contains one utility for manipulating the output of the
 weighted-ensemble and SSA algorithms.
 
 No command-line functionality; this module must be imported to be used.
@@ -15,32 +33,6 @@ import numpy as np
 
 import ssad
 import ensemble as we
-
-def conditional_delay_average(traj, paving, tau, exclude_begin=True):
-    """
-    Compute the conditional average <x(t - tau) | x> of a trajectory.
-
-    The average is computed as by tallying x(t - tau) for each
-    (x_i, t_i) in the trajectory; the averaging is done over a
-    certain range of x_i specified by the paving.
-
-    Parameters:
-        traj    The trajectory for which to compute the average; must
-                support the same interface as ssad.Trajectory.
-        paving  The paving used to subdivide the state space in order to
-                compute the average in a discrete way; must expose the
-                same interface as ensemble.Paving .
-        tau     Delay time used to calculate the average.
-
-    Optional parameters:
-        exclude_begin
-                Whether to exclude the first tau time units of the
-                trajectory in computing the average (in case the values
-                of x(t < 0) are not well-defined or do not behave like
-                the rest of the trajectory). Default True.
-
-    """
-    pass
 
 def delay_joint_pdist(traj, tau, paving_now, paving_tau, existing=None,
         from_time=None):
