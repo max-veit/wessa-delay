@@ -4,14 +4,14 @@
 The implementation of the weighted-ensemble SSA with delays consists of three
 Python modules:
 
-    * `ssad.py`
-    * `ensemble.py`
-    * `util.py`
+ * `ssad.py`
+ * `ensemble.py`
+ * `util.py`
 
 and two scripts:
 
-    * `runner_wegen.py`
-    * `runner_ddjd.py`
+ * `runner_wegen.py`
+ * `runner_ddjd.py`
 
 The module `ssad` contains the full implementation of the SSA incorporating
 delayed reactions. The module `ensemble`, which depends on `ssad`, adds
@@ -25,19 +25,19 @@ below.
 Much of the development and testing of the code, as well as generation,
 analysis, and plotting of results, was done using four IPython notebooks:
 
-    * `Testbed.ipynb`, a sandbox notebook used for some of the inital testing
-      as well as trying out new features and concepts.
+ * `Testbed.ipynb`, a sandbox notebook used for some of the inital testing
+   as well as trying out new features and concepts.
 
-    * `UnitTesting.ipynb` for more systematic testing of specific units of
-      functionality (I may replace this with a formal set of tests using the
-      `unittest` module at some point, although the stochastic nature of some
-      of the algorithms makes precise unit testing difficult).
+ * `UnitTesting.ipynb` for more systematic testing of specific units of
+   functionality (I may replace this with a formal set of tests using the
+   `unittest` module at some point, although the stochastic nature of some
+   of the algorithms makes precise unit testing difficult).
 
-    * `DelayedDegradation.ipynb`, a detailed investigation of the delayed
-      protein degradation system.
+ * `DelayedDegradation.ipynb`, a detailed investigation of the delayed
+   protein degradation system.
 
-    * `Plotting.ipynb` for making nicely formatted plots of results generated
-      by the automated scripts.
+ * `Plotting.ipynb` for making nicely formatted plots of results generated
+   by the automated scripts.
 
 ###Automated runner scripts###
 
