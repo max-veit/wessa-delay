@@ -19,7 +19,6 @@ separate branches. It may be added to this repository at some point.
 
 ###Contact###
 
-You may contact me at <a href="mailto:&#118;&#101;&#105;&#116;&#48;&#48;&#52;&#52;&#64;&#117;&#109;&#110;&#46;&#101;&#100;&#117;">&#118;&#101;&#105;&#116;&#48;&#48;&#52;&#52;&#64;&#117;&#109;&#110;&#46;&#101;&#100;&#117;</a>
-if you would like help using the software. If you discover an error or would
-like to add a feature I would certainly appreciate it if you could let me know,
-preferaby using GitHub.
+You may contact me at <veit0044+wessa@gmail.com> if you would like help using
+the software. If you discover an error or would like to add a feature I would
+certainly appreciate it if you could let me know, preferaby using GitHub.
