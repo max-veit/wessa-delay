@@ -19,6 +19,6 @@ separate branches. It may be added to this repository at some point.
 
 ###Contact###
 
-You may contact me at <veit0044+wessa@gmail.com> if you would like help using
+You may contact me at <veit0044+wessa@umn.edu> if you would like help using
 the software. If you discover an error or would like to add a feature I would
 certainly appreciate it if you could let me know, preferaby using GitHub.
