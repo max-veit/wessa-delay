@@ -1,5 +1,7 @@
-#Max Veit's Undergraduate Thesis Project#
-##Stochastic Simulation of Genetic Regulatory Networks with Delays##
+Max Veit's Undergraduate Thesis Project
+=======================================
+Stochastic Simulation of Genetic Regulatory Networks with Delays
+----------------------------------------------------------------
 
 This repository contains the code implementation of the Stochastic Simulation
 Algorithm (SSA, aka Gillespie algorithm) with delayed reactions and
@@ -17,8 +19,9 @@ The `thesis` and `presentation` directories contain preliminary work on the
 thesis and accompanying presentation, although that work has been moved to
 separate branches. It may be added to this repository at some point.
 
-###Contact###
+Contact
+=======
 
-You may contact me at <veit0044+wessa@umn.edu> if you would like help using
-the software. If you discover an error or would like to add a feature I would
-certainly appreciate it if you could let me know, preferaby using GitHub.
+You may contact me at <maxdveit+wessa at gmail dot com> if you would like help using
+the software. If you discover an error or would like to add a feature, please open an
+issue on the Github repository.
